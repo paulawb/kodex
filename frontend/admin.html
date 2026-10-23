@@ -31,12 +31,11 @@
         <input name="price" type="number" min="0" placeholder="Precio" required>
       </div>
       <div class="row">
-        <select name="type"><option value="tee">Camiseta</option><option value="hoodie">Hoodie</option><option value="cap">Gorra</option></select>
-        <select name="graphic"><option value="sigil">Gráfico: Sigil</option><option value="fang">Gráfico: Fang</option><option value="eye">Gráfico: Eye</option></select>
+        <input name="description" placeholder="Descripción para el mensaje (ej. Oversize, algodón 280g)" maxlength="200">
         <input name="sizes" placeholder="Tallas separadas por coma: S,M,L,XL" value="S,M,L,XL" required>
         <label class="fit"><input type="checkbox" name="active" checked style="width:auto;margin:0"> Visible</label>
       </div>
-      <p class="mono" style="margin:.6rem 0">COLORES (tela · tinta del gráfico · fotos reales opcionales: PNG sin fondo, o JPG y se recorta el fondo)</p>
+      <p class="mono" style="margin:.6rem 0">COLORES: elige cualquier color de la paleta, marca si está disponible y sube su foto (PNG sin fondo, o JPG y se recorta el fondo). Sin foto FRONT el color no se muestra en la tienda.</p>
       <div id="colors"></div>
       <div class="row"><button type="button" class="btn fit" id="addColor">+ COLOR</button>
         <button class="btn red fit" type="submit">GUARDAR</button>
@@ -49,6 +48,8 @@
         <input name="currency" placeholder="Moneda" maxlength="5"></div>
       <p class="mono" style="margin:.8rem 0 .4rem">MENSAJE DE WHATSAPP · variables: {nombre} {ciudad} {items} {total}</p>
       <textarea name="message_template" required maxlength="2000"></textarea>
+      <p class="mono" style="margin:.8rem 0 .4rem">FORMATO DE CADA PRENDA · variables: {n} {nombre} {ref} {descripcion} {color} {talla} {cantidad} {subtotal}</p>
+      <textarea name="item_template" required maxlength="500" style="min-height:70px"></textarea>
       <pre class="mono card" id="preview" style="white-space:pre-wrap;margin-top:.6rem"></pre>
       <button class="btn red fit">GUARDAR</button>
     </form>

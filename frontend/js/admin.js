@@ -1,6 +1,6 @@
 import { api } from "./api.js";
 import { API_URL } from "./config.js";
-import { renderMessage } from "./message.js";
+import { formatItems, renderMessage } from "./message.js";
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -15,16 +15,21 @@ function photoField(side, label, url) {
     <button type="button" class="btn clr" ${url ? "" : "hidden"}>Quitar</button></label>`;
 }
 
-function colorRow(c = { name: "", hex: "#080808", ink: "#d60e0e" }) {
+function colorRow(c = { name: "", hex: "#080808", available: true }) {
   const d = document.createElement("div");
   d.className = "row color-row";
   d.dataset.front = c.front_image || "";
   d.dataset.back = c.back_image || "";
   d.innerHTML = `<input class="cn" placeholder="Nombre (Pitch Black)" value="${esc(c.name)}" required>
-    <input class="ch" type="color" value="${c.hex}"><input class="ci" type="color" value="${c.ink}">
+    <input class="ch" type="color" value="${c.hex}" title="Paleta completa">
+    <input class="hx" value="${c.hex}" maxlength="7" style="max-width:90px" aria-label="Código hex">
+    <label class="fit"><input type="checkbox" class="av" ${c.available === false ? "" : "checked"} style="width:auto;margin:0"> Disponible</label>
     ${photoField("front", "Foto FRONT", c.front_image)}${photoField("back", "Foto BACK", c.back_image)}
     <button type="button" class="btn fit rm">×</button>`;
   d.querySelector(".rm").onclick = () => d.remove();
+  const ch = d.querySelector(".ch"), hx = d.querySelector(".hx");
+  ch.oninput = () => (hx.value = ch.value);
+  hx.oninput = () => { if (/^#[0-9a-fA-F]{6}$/.test(hx.value)) ch.value = hx.value; };
   d.querySelectorAll(".upl").forEach((box) => {
     const side = box.dataset.side, img = box.querySelector("img"), clr = box.querySelector(".clr");
     box.querySelector(".file").onchange = async (e) => {
@@ -69,6 +74,7 @@ async function load() {
     $("#sform").whatsapp_number.value = s.whatsapp_number;
     $("#sform").currency.value = s.currency;
     $("#sform").message_template.value = s.message_template;
+    $("#sform").item_template.value = s.item_template;
     updatePreview();
     $("#err").textContent = "";
     renderList();
@@ -78,7 +84,7 @@ async function load() {
 function renderList() {
   $("#list").innerHTML = products.length
     ? products.map((p) => `<div class="plist"><div><b>${esc(p.ref)} · ${esc(p.name)}</b> ${p.active ? "" : "(oculta)"}<br>
-      <span class="mono">$${p.price.toLocaleString("es-CO")} · ${p.sizes.map(esc).join("/")} · ${p.colors.map((c) => esc(c.name)).join(", ")}</span></div>
+      <span class="mono">$${p.price.toLocaleString("es-CO")} · ${p.sizes.map(esc).join("/")} · ${p.colors.map((c) => esc(c.name) + (c.available === false ? " (off)" : c.front_image ? "" : " (sin foto)")).join(", ")}</span></div>
       <div class="row" style="flex:0 0 auto"><button class="btn fit" data-e="${p.id}">EDITAR</button><button class="btn fit" data-d="${p.id}">BORRAR</button></div></div>`).join("")
     : "<p class='mono'>Sin prendas.</p>";
 }
@@ -90,7 +96,7 @@ $("#list").onclick = async (e) => {
     editingId = p.id;
     const f = $("#pform");
     f.ref.value = p.ref; f.name.value = p.name; f.price.value = p.price;
-    f.type.value = p.type; f.graphic.value = p.graphic; f.sizes.value = p.sizes.join(",");
+    f.description.value = p.description || ""; f.sizes.value = p.sizes.join(",");
     f.active.checked = p.active;
     $("#colors").innerHTML = "";
     p.colors.forEach(colorRow);
@@ -108,10 +114,10 @@ $("#pform").onsubmit = async (e) => {
   const f = e.target;
   const body = {
     ref: f.ref.value.trim(), name: f.name.value.trim(), price: parseInt(f.price.value, 10),
-    type: f.type.value, graphic: f.graphic.value, active: f.active.checked,
+    description: f.description.value.trim(), active: f.active.checked,
     sizes: f.sizes.value.split(",").map((s) => s.trim().toUpperCase()).filter(Boolean),
     colors: [...document.querySelectorAll(".color-row")].map((r) => ({
-      name: r.querySelector(".cn").value.trim(), hex: r.querySelector(".ch").value, ink: r.querySelector(".ci").value,
+      name: r.querySelector(".cn").value.trim(), hex: r.querySelector(".ch").value, available: r.querySelector(".av").checked,
       front_image: r.dataset.front || null, back_image: r.dataset.back || null,
     })),
   };
@@ -124,18 +130,21 @@ $("#pform").onsubmit = async (e) => {
 $("#sform").onsubmit = async (e) => {
   e.preventDefault();
   try {
-    await api.updateSettings(token, { whatsapp_number: e.target.whatsapp_number.value.trim(), currency: e.target.currency.value.trim() || "COP", message_template: e.target.message_template.value });
+    await api.updateSettings(token, { whatsapp_number: e.target.whatsapp_number.value.trim(), currency: e.target.currency.value.trim() || "COP", message_template: e.target.message_template.value, item_template: e.target.item_template.value });
     $("#err").textContent = "";
     alert("Guardado");
   } catch (er) { fail(er); }
 };
 
 function updatePreview() {
+  const money = (n) => "$" + n.toLocaleString("es-CO");
+  const cart = [{ ref: "KDX-001", name: "Sigil Tee", description: "Oversize", price: 129000, color: "Negro", size: "M", qty: 1 }];
   $("#preview").textContent = renderMessage($("#sform").message_template.value, {
-    nombre: "Ana", ciudad: "Cali", items: "1. KDX-001 Sigil Tee | Color: Pitch Black | Talla: M | x1 | $129.000", total: "$129.000",
+    nombre: "Ana", ciudad: "Cali", items: formatItems(cart, $("#sform").item_template.value, money), total: money(129000),
   });
 }
 $("#sform").message_template.oninput = updatePreview;
+$("#sform").item_template.oninput = updatePreview;
 $("#addColor").onclick = () => colorRow();
 $("#cancel").onclick = resetForm;
 $("#logout").onclick = () => { sessionStorage.removeItem("kodex-token"); token = null; show(false); };

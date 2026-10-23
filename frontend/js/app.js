@@ -3,7 +3,7 @@ import { garmentView } from "./garment.js";
 import { buildWhatsAppUrl } from "./message.js";
 
 const $ = (s) => document.querySelector(s);
-const state = { products: [], settings: { whatsapp_number: "", currency: "COP", message_template: "{items}\n{total}" }, cart: [], sel: null };
+const state = { products: [], settings: { whatsapp_number: "", currency: "COP", message_template: "{items}\n{total}", item_template: "{n}. {nombre} {color} {talla} x{cantidad}" }, cart: [], sel: null };
 const money = (n) => "$" + n.toLocaleString("es-CO") + " " + state.settings.currency;
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
@@ -54,6 +54,9 @@ function paintGarment() {
   $("#faceFront").innerHTML = garmentView(product, color, "front");
   $("#faceBack").innerHTML = garmentView(product, color, "back");
   $("#vColorName").textContent = color.name;
+  const hasBack = !!color.back_image;
+  $("#btnBack").hidden = !hasBack;
+  if (!hasBack && state.sel.side === "back") setSide("front");
 }
 
 function openViewer(p) {
@@ -61,6 +64,7 @@ function openViewer(p) {
   $("#vRef").textContent = p.ref;
   $("#vName").textContent = p.name;
   $("#vPrice").textContent = money(p.price);
+  $("#vDesc").textContent = p.description || "";
   $("#vColors").innerHTML = p.colors
     .map((c, i) => `<button class="sw ${i ? "" : "on"}" data-i="${i}" title="${esc(c.name)}" style="background:${esc(c.hex)}"></button>`)
     .join("");
@@ -97,7 +101,7 @@ function addToCart() {
   const { product: p, color, size } = state.sel;
   const found = state.cart.find((i) => i.id === p.id && i.color === color.name && i.size === size);
   if (found) found.qty++;
-  else state.cart.push({ id: p.id, ref: p.ref, name: p.name, price: p.price, color: color.name, size, qty: 1 });
+  else state.cart.push({ id: p.id, ref: p.ref, name: p.name, price: p.price, description: p.description || "", color: color.name, size, qty: 1 });
   saveCart(); renderCart();
   $("#viewer").hidden = true;
   openDrawer(true);
@@ -121,7 +125,7 @@ function bind() {
   $("#cartBtn").onclick = () => openDrawer(true);
   $("#btnFront").onclick = () => setSide("front");
   $("#btnBack").onclick = () => setSide("back");
-  $("#flip").onclick = () => setSide(state.sel.side === "front" ? "back" : "front");
+  $("#flip").onclick = () => state.sel.color.back_image && setSide(state.sel.side === "front" ? "back" : "front");
   $("#vColors").onclick = (e) => {
     const b = e.target.closest(".sw");
     if (!b) return;
@@ -150,7 +154,7 @@ function bind() {
     if (!state.cart.length) return;
     const f = new FormData(e.target);
     window.open(buildWhatsAppUrl({
-      number: state.settings.whatsapp_number, template: state.settings.message_template,
+      number: state.settings.whatsapp_number, template: state.settings.message_template, itemTemplate: state.settings.item_template,
       name: f.get("name").trim(), city: f.get("city").trim(), cart: state.cart, money,
     }), "_blank", "noopener");
   };
@@ -166,6 +170,9 @@ async function init() {
   try {
     [state.products, state.settings] = await Promise.all([api.products(), api.settings()]);
     $("#status").textContent = state.products.length ? "" : "SIN PRENDAS POR AHORA";
+    const ids = new Set(state.products.map((p) => p.id));
+    state.cart = state.cart.filter((i) => ids.has(i.id));
+    saveCart();
     renderRack(); renderCart();
   } catch {
     $("#status").textContent = "NO SE PUDO CONECTAR CON EL SERVIDOR (puede estar despertando, recarga en 30s)";

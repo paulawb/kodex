@@ -21,11 +21,12 @@ cd frontend && node --test tests/  # mensaje de WhatsApp
   El disco free es efímero: para datos permanentes usa un volumen (Fly.io) o reemplaza `repository.py` por una BD externa (Neon/Supabase).
 - **Frontend**: GitHub Pages / Netlify / Cloudflare Pages apuntando a `frontend/`. Antes de publicar edita `frontend/js/config.js` con la URL del backend.
 
-## Fotos reales
-En el admin, cada color acepta foto FRONT y BACK. PNG con transparencia se conserva; JPG (o PNG opaco) se recorta el fondo liso automáticamente (conviene fondo uniforme) y se ajusta al contenido. Máx. 8 MB. Se guardan en `UPLOAD_DIR` (efímero en Render free: usa un volumen o almacenamiento externo). Sin foto se usa la prenda SVG.
+## Fotos y colores
+Solo se muestran fotos reales; sin foto no aparece nada. Por cada prenda el admin agrega los colores que quiera (selector de paleta completa o código hex), marca cuáles están **disponibles** y sube foto FRONT (obligatoria para que el color se muestre) y BACK (opcional; sin ella se oculta el botón BACK). Una prenda sin ningún color disponible con foto no aparece en la tienda.
+PNG con transparencia se conserva; JPG (o PNG opaco) se recorta el fondo liso automáticamente. Máx. 8 MB. Se guardan en `UPLOAD_DIR` (efímero en Render free: usa un volumen o almacenamiento externo).
 
 ## Mensaje de WhatsApp
-Editable en el admin con variables `{nombre}` `{ciudad}` `{items}` `{total}`.
+Editable en el admin: saludo/estructura con `{nombre}` `{ciudad}` `{items}` `{total}`, y formato de cada prenda con `{n}` `{nombre}` `{ref}` `{descripcion}` `{color}` `{talla}` `{cantidad}` `{subtotal}`. Cada prenda tiene nombre y descripción editables.
 
 ## Admin
-`/admin.html`: crear/editar/borrar prendas, precios, colores (tela + tinta), tallas, visibilidad y número de WhatsApp.
+`/admin.html`: crear/editar/borrar prendas, nombre, descripción, precios, colores y fotos, tallas, visibilidad y número de WhatsApp.

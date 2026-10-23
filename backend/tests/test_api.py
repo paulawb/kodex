@@ -16,8 +16,8 @@ def auth(client):
     return {"Authorization": f"Bearer {t}"}
 
 
-def test_public_products_seeded(client):
-    assert len(client.get("/api/products").json()) == 3
+def test_store_starts_empty(client):
+    assert client.get("/api/products").json() == []
 
 
 def test_admin_requires_auth(client):
@@ -28,13 +28,13 @@ def test_admin_requires_auth(client):
 def test_admin_crud(client):
     h = auth(client)
     body = {"ref": "KDX-9", "name": "Test", "price": 1000, "sizes": ["S"],
-            "colors": [{"name": "A", "hex": "#000000", "ink": "#ffffff"}]}
+            "colors": [{"name": "A", "hex": "#000000"}]}
     p = client.post("/api/admin/products", json=body, headers=h).json()
     body["price"] = 2000
     assert client.put(f"/api/admin/products/{p['id']}", json=body, headers=h).json()["price"] == 2000
     body["active"] = False
     client.put(f"/api/admin/products/{p['id']}", json=body, headers=h)
-    assert len(client.get("/api/products").json()) == 3
+    assert client.get("/api/products").json() == []
     assert client.delete(f"/api/admin/products/{p['id']}", headers=h).status_code == 204
     assert client.put("/api/admin/settings", json={"whatsapp_number": "573001112233"}, headers=h).status_code == 200
 
@@ -104,10 +104,10 @@ def test_product_with_photos(client):
     h = auth(client)
     url = _upload(client, _jpg()).json()["url"]
     body = {"ref": "K", "name": "N", "price": 1, "sizes": ["S"],
-            "colors": [{"name": "A", "hex": "#000000", "ink": "#ffffff", "front_image": url}]}
+            "colors": [{"name": "A", "hex": "#000000", "front_image": url}]}
     client.post("/api/admin/products", json=body, headers=h)
     prods = client.get("/api/products").json()
-    assert prods[-1]["colors"][0]["front_image"] == url
+    assert prods[0]["colors"][0]["front_image"] == url
 
 
 # ---- Mensaje WhatsApp ----
@@ -120,3 +120,50 @@ def test_message_template_default_and_update(client):
     assert client.get("/api/settings").json()["message_template"] == tpl
     bad = client.put("/api/admin/settings", json={"whatsapp_number": "573001112233", "message_template": ""}, headers=h)
     assert bad.status_code == 422
+
+
+# ---- Visibilidad: sin foto no aparece nada ----
+def _product(client, h, colors, **extra):
+    body = {"ref": "K", "name": "N", "price": 1, "sizes": ["S"], "colors": colors, **extra}
+    return client.post("/api/admin/products", json=body, headers=h).json()
+
+
+def test_product_without_photo_is_hidden(client):
+    h = auth(client)
+    _product(client, h, [{"name": "Rojo", "hex": "#ff0000"}])
+    assert client.get("/api/products").json() == []
+    assert len(client.get("/api/admin/products", headers=h).json()) == 1  # el admin sí lo ve
+
+
+def test_only_available_colors_with_photo_shown(client):
+    h = auth(client)
+    u1 = _upload(client, _jpg()).json()["url"]
+    u2 = _upload(client, _jpg()).json()["url"]
+    u3 = _upload(client, _jpg()).json()["url"]
+    _product(client, h, [
+        {"name": "Con foto", "hex": "#123456", "front_image": u1},
+        {"name": "Sin foto", "hex": "#654321"},
+        {"name": "Desactivado", "hex": "#abcdef", "front_image": u2, "available": False},
+        {"name": "Con foto 2", "hex": "#fedcba", "front_image": u3, "back_image": u3},
+    ])
+    names = [c["name"] for c in client.get("/api/products").json()[0]["colors"]]
+    assert names == ["Con foto", "Con foto 2"]
+
+
+def test_any_hex_color_accepted_and_invalid_rejected(client):
+    h = auth(client)
+    ok = _product(client, h, [{"name": "Verde oliva", "hex": "#6b8e23"}])
+    assert ok["colors"][0]["hex"] == "#6b8e23"
+    bad = {"ref": "K", "name": "N", "price": 1, "sizes": ["S"], "colors": [{"name": "x", "hex": "rojo"}]}
+    assert client.post("/api/admin/products", json=bad, headers=h).status_code == 422
+
+
+def test_product_description_and_item_template(client):
+    h = auth(client)
+    p = _product(client, h, [{"name": "A", "hex": "#000000"}], description="Oversize, algodón 280g")
+    assert p["description"] == "Oversize, algodón 280g"
+    s = client.get("/api/settings").json()
+    assert "{nombre}" in s["item_template"] and "Hola" in s["message_template"]
+    tpl = "{n}) {nombre} - {color}/{talla} x{cantidad} = {subtotal}"
+    r = client.put("/api/admin/settings", json={"whatsapp_number": "573001112233", "item_template": tpl}, headers=h)
+    assert r.status_code == 200 and client.get("/api/settings").json()["item_template"] == tpl

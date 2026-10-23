@@ -2,36 +2,9 @@ import json
 import sqlite3
 import threading
 
-from .schemas import DEFAULT_TEMPLATE, Product, ProductIn
+from .schemas import DEFAULT_ITEM_TEMPLATE, DEFAULT_TEMPLATE, Product, ProductIn
 
-SEED = [
-    ProductIn(
-        ref="KDX-001", name="Sigil Tee", type="tee", graphic="sigil", price=129000,
-        sizes=["S", "M", "L", "XL"],
-        colors=[
-            {"name": "Pitch Black", "hex": "#080808", "ink": "#d60e0e"},
-            {"name": "Blood Crimson", "hex": "#8e0b0b", "ink": "#080808"},
-            {"name": "Washed Charcoal", "hex": "#3a3836", "ink": "#e8d9b0"},
-        ],
-    ),
-    ProductIn(
-        ref="KDX-002", name="Fang Hoodie", type="hoodie", graphic="fang", price=249000,
-        sizes=["S", "M", "L", "XL"],
-        colors=[
-            {"name": "Pitch Black", "hex": "#080808", "ink": "#d60e0e"},
-            {"name": "Washed Charcoal", "hex": "#3a3836", "ink": "#d60e0e"},
-            {"name": "Bone", "hex": "#d9ccb0", "ink": "#080808"},
-        ],
-    ),
-    ProductIn(
-        ref="KDX-003", name="Eye Tee", type="tee", graphic="eye", price=139000,
-        sizes=["M", "L", "XL"],
-        colors=[
-            {"name": "Blood Crimson", "hex": "#8e0b0b", "ink": "#e8d9b0"},
-            {"name": "Pitch Black", "hex": "#080808", "ink": "#e8d9b0"},
-        ],
-    ),
-]
+SEED: list[ProductIn] = []
 
 
 class Repository:
@@ -52,6 +25,7 @@ class Repository:
             self._db.execute("INSERT OR IGNORE INTO settings VALUES ('whatsapp_number', '573000000000')")
             self._db.execute("INSERT OR IGNORE INTO settings VALUES ('currency', 'COP')")
             self._db.execute("INSERT OR IGNORE INTO settings VALUES ('message_template', ?)", (DEFAULT_TEMPLATE,))
+            self._db.execute("INSERT OR IGNORE INTO settings VALUES ('item_template', ?)", (DEFAULT_ITEM_TEMPLATE,))
 
     @staticmethod
     def _to_product(row) -> Product:

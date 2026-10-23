@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .images import InvalidImage, process_upload
 from .config import Settings, load_settings
 from .repository import Repository
-from .schemas import LoginIn, Product, ProductIn, SettingsIn
+from .schemas import LoginIn, Product, ProductIn, SettingsIn, storefront_view
 from .security import AdminDep, check_password, make_token
 
 
@@ -27,7 +27,8 @@ def health():
 
 @public.get("/products", response_model=list[Product])
 def products(repo: Repository = Depends(repo_dep)):
-    return repo.list_products(only_active=True)
+    views = (storefront_view(p) for p in repo.list_products(only_active=True))
+    return [v for v in views if v]
 
 
 @public.get("/settings")

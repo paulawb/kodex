@@ -1,16 +1,26 @@
-// Plantilla del mensaje de WhatsApp. Variables: {nombre} {ciudad} {items} {total}
-export function renderMessage(template, vars) {
-  return template.replace(/\{(nombre|ciudad|items|total)\}/g, (_, k) => vars[k]);
-}
+// Variables del mensaje: {nombre} {ciudad} {items} {total}
+// Variables de cada prenda: {n} {nombre} {ref} {descripcion} {color} {talla} {cantidad} {subtotal}
+const fill = (tpl, vars) => tpl.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
 
-export function formatItems(cart, money) {
+export function formatItems(cart, itemTemplate, money) {
   return cart
-    .map((i, n) => `${n + 1}. ${i.ref} ${i.name} | Color: ${i.color} | Talla: ${i.size} | x${i.qty} | ${money(i.price * i.qty)}`)
+    .map((i, idx) =>
+      fill(itemTemplate, {
+        n: idx + 1, nombre: i.name, ref: i.ref, descripcion: i.description || "", color: i.color,
+        talla: i.size, cantidad: i.qty, subtotal: money(i.price * i.qty),
+      }).replace(/ {2,}/g, " ").replace(/ +\n/g, "\n").trim()
+    )
     .join("\n");
 }
 
-export function buildWhatsAppUrl({ number, template, name, city, cart, money }) {
+export function renderMessage(template, vars) {
+  return fill(template, vars);
+}
+
+export function buildWhatsAppUrl({ number, template, itemTemplate, name, city, cart, money }) {
   const total = cart.reduce((n, i) => n + i.price * i.qty, 0);
-  const text = renderMessage(template, { nombre: name, ciudad: city, items: formatItems(cart, money), total: money(total) });
+  const text = renderMessage(template, {
+    nombre: name, ciudad: city, items: formatItems(cart, itemTemplate, money), total: money(total),
+  });
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
