@@ -1,4 +1,6 @@
 import { api } from "./api.js";
+import { API_URL } from "./config.js";
+import { renderMessage } from "./message.js";
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -6,13 +8,38 @@ let token = sessionStorage.getItem("kodex-token");
 let products = [];
 let editingId = null;
 
+function photoField(side, label, url) {
+  return `<label class="upl" data-side="${side}">${label}
+    <img ${url ? `src="${/^https?:/.test(url) ? "" : API_URL}${esc(url)}"` : "hidden"} alt="">
+    <input type="file" accept="image/png,image/jpeg" class="file">
+    <button type="button" class="btn clr" ${url ? "" : "hidden"}>Quitar</button></label>`;
+}
+
 function colorRow(c = { name: "", hex: "#080808", ink: "#d60e0e" }) {
   const d = document.createElement("div");
   d.className = "row color-row";
+  d.dataset.front = c.front_image || "";
+  d.dataset.back = c.back_image || "";
   d.innerHTML = `<input class="cn" placeholder="Nombre (Pitch Black)" value="${esc(c.name)}" required>
     <input class="ch" type="color" value="${c.hex}"><input class="ci" type="color" value="${c.ink}">
-    <button type="button" class="btn fit">×</button>`;
-  d.querySelector("button").onclick = () => d.remove();
+    ${photoField("front", "Foto FRONT", c.front_image)}${photoField("back", "Foto BACK", c.back_image)}
+    <button type="button" class="btn fit rm">×</button>`;
+  d.querySelector(".rm").onclick = () => d.remove();
+  d.querySelectorAll(".upl").forEach((box) => {
+    const side = box.dataset.side, img = box.querySelector("img"), clr = box.querySelector(".clr");
+    box.querySelector(".file").onchange = async (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      try {
+        const url = await api.upload(token, f);
+        d.dataset[side] = url;
+        img.src = API_URL + url; img.hidden = false; clr.hidden = false;
+        $("#err").textContent = "";
+      } catch (er) { fail(er); }
+      e.target.value = "";
+    };
+    clr.onclick = () => { d.dataset[side] = ""; img.hidden = true; clr.hidden = true; };
+  });
   $("#colors").append(d);
 }
 
@@ -41,6 +68,8 @@ async function load() {
     const s = await api.settings();
     $("#sform").whatsapp_number.value = s.whatsapp_number;
     $("#sform").currency.value = s.currency;
+    $("#sform").message_template.value = s.message_template;
+    updatePreview();
     $("#err").textContent = "";
     renderList();
   } catch (e) { fail(e); }
@@ -83,6 +112,7 @@ $("#pform").onsubmit = async (e) => {
     sizes: f.sizes.value.split(",").map((s) => s.trim().toUpperCase()).filter(Boolean),
     colors: [...document.querySelectorAll(".color-row")].map((r) => ({
       name: r.querySelector(".cn").value.trim(), hex: r.querySelector(".ch").value, ink: r.querySelector(".ci").value,
+      front_image: r.dataset.front || null, back_image: r.dataset.back || null,
     })),
   };
   try {
@@ -94,12 +124,18 @@ $("#pform").onsubmit = async (e) => {
 $("#sform").onsubmit = async (e) => {
   e.preventDefault();
   try {
-    await api.updateSettings(token, { whatsapp_number: e.target.whatsapp_number.value.trim(), currency: e.target.currency.value.trim() || "COP" });
+    await api.updateSettings(token, { whatsapp_number: e.target.whatsapp_number.value.trim(), currency: e.target.currency.value.trim() || "COP", message_template: e.target.message_template.value });
     $("#err").textContent = "";
     alert("Guardado");
   } catch (er) { fail(er); }
 };
 
+function updatePreview() {
+  $("#preview").textContent = renderMessage($("#sform").message_template.value, {
+    nombre: "Ana", ciudad: "Cali", items: "1. KDX-001 Sigil Tee | Color: Pitch Black | Talla: M | x1 | $129.000", total: "$129.000",
+  });
+}
+$("#sform").message_template.oninput = updatePreview;
 $("#addColor").onclick = () => colorRow();
 $("#cancel").onclick = resetForm;
 $("#logout").onclick = () => { sessionStorage.removeItem("kodex-token"); token = null; show(false); };

@@ -87,3 +87,9 @@ button{font:inherit;cursor:pointer;color:inherit;background:none;border:0}
 .plist{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.6rem 0;border-bottom:1px solid #0003}
 .color-row input[type=color]{padding:0;height:40px;flex:0 0 50px;min-width:50px}
 .err{color:var(--red);font-family:"Space Mono",monospace}
+.photo{display:block;width:100%;height:100%;object-fit:contain}
+.cloth .photo{height:auto;max-height:320px}
+.hanger .cloth{min-height:200px}
+.upl{display:flex;flex-direction:column;gap:.2rem;font-family:"Space Mono",monospace;font-size:.7rem}
+.upl img{height:48px;object-fit:contain;background:#0001}
+textarea{width:100%;padding:.7rem;border:2px solid var(--ink);background:#f1e8cf;font:inherit;min-height:140px}

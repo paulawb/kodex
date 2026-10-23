@@ -1,3 +1,5 @@
+import { API_URL } from "./config.js";
+
 // Generadores SVG de prendas + gráficos tribales (vectoriales).
 const SHAPES = {
   tee: "M70 20 L100 34 Q150 52 200 34 L230 20 L286 62 L258 104 L232 90 L232 300 L68 300 L68 90 L42 104 L14 62 Z",
@@ -39,4 +41,14 @@ export function garmentSVG(product, color, side = "front") {
   return `<svg viewBox="0 0 300 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${product.name}">
     <path d="${body}" fill="${hex}" stroke="rgba(0,0,0,.45)" stroke-width="2"/>
     ${hood}${art}</svg>`;
+}
+
+// Usa la foto real si existe; si no, dibuja la prenda SVG.
+export function garmentView(product, color, side = "front") {
+  const url = color[side === "front" ? "front_image" : "back_image"];
+  if (url) {
+    const src = /^https?:/.test(url) ? url : API_URL + url;
+    return `<img class="photo" src="${src.replace(/"/g, "&quot;")}" alt="${product.name} ${side}" loading="lazy">`;
+  }
+  return garmentSVG(product, color, side);
 }

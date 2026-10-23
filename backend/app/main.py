@@ -1,6 +1,11 @@
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request
+import os
+import uuid
+
+from fastapi import APIRouter, Depends, FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
+from .images import InvalidImage, process_upload
 from .config import Settings, load_settings
 from .repository import Repository
 from .schemas import LoginIn, Product, ProductIn, SettingsIn
@@ -62,6 +67,22 @@ def delete_product(pid: int, repo: Repository = Depends(repo_dep)):
         raise HTTPException(404, "Prenda no encontrada")
 
 
+@admin.post("/upload", status_code=201)
+async def upload_image(request: Request, file: UploadFile = File(...)):
+    s: Settings = request.app.state.settings
+    data = await file.read(s.max_upload_bytes + 1)
+    if len(data) > s.max_upload_bytes:
+        raise HTTPException(413, "La imagen supera el tamaño máximo")
+    try:
+        png = process_upload(data)
+    except InvalidImage as e:
+        raise HTTPException(400, str(e))
+    name = f"{uuid.uuid4().hex}.png"
+    with open(os.path.join(s.upload_dir, name), "wb") as f:
+        f.write(png)
+    return {"url": f"/uploads/{name}"}
+
+
 @admin.put("/settings")
 def update_settings(body: SettingsIn, repo: Repository = Depends(repo_dep)):
     repo.set_settings(body.model_dump())
@@ -79,6 +100,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    os.makedirs(settings.upload_dir, exist_ok=True)
+    app.mount("/uploads", StaticFiles(directory=settings.upload_dir), name="uploads")
     app.include_router(public)
     app.include_router(admin)
     return app

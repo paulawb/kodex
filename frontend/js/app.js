@@ -1,8 +1,9 @@
 import { api } from "./api.js";
-import { garmentSVG } from "./garment.js";
+import { garmentView } from "./garment.js";
+import { buildWhatsAppUrl } from "./message.js";
 
 const $ = (s) => document.querySelector(s);
-const state = { products: [], settings: { whatsapp_number: "", currency: "COP" }, cart: [], sel: null };
+const state = { products: [], settings: { whatsapp_number: "", currency: "COP", message_template: "{items}\n{total}" }, cart: [], sel: null };
 const money = (n) => "$" + n.toLocaleString("es-CO") + " " + state.settings.currency;
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
@@ -15,7 +16,7 @@ function renderRack() {
     el.className = "hanger";
     el.style.setProperty("--d", `${(i % 5) * -0.4}s`);
     el.innerHTML = `<span class="hook"></span>
-      <span class="cloth">${garmentSVG(p, p.colors[0])}</span>
+      <span class="cloth">${garmentView(p, p.colors[0])}</span>
       <span class="mono ref">${esc(p.ref)}</span>
       <span class="hname">${esc(p.name)}</span>
       <span class="mono">${money(p.price)}</span>`;
@@ -50,8 +51,8 @@ function enableDrag() {
 /* ---------- Viewer ---------- */
 function paintGarment() {
   const { product, color } = state.sel;
-  $("#faceFront").innerHTML = garmentSVG(product, color, "front");
-  $("#faceBack").innerHTML = garmentSVG(product, color, "back");
+  $("#faceFront").innerHTML = garmentView(product, color, "front");
+  $("#faceBack").innerHTML = garmentView(product, color, "back");
   $("#vColorName").textContent = color.name;
 }
 
@@ -107,17 +108,6 @@ function openDrawer(open) {
   $("#drawer").setAttribute("aria-hidden", String(!open));
 }
 
-function buildWhatsAppLink(name, city) {
-  const total = state.cart.reduce((n, i) => n + i.price * i.qty, 0);
-  const lines = state.cart.map(
-    (i, n) => `${n + 1}. ${i.ref} ${i.name} | Color: ${i.color} | Talla: ${i.size} | x${i.qty} | ${money(i.price * i.qty)}`
-  );
-  const text = [
-    "*Nuevo pedido KØDEX*", `Nombre: ${name}`, `Ciudad: ${city}`, "", ...lines, "", `*TOTAL: ${money(total)}*`,
-  ].join("\n");
-  return `https://wa.me/${state.settings.whatsapp_number}?text=${encodeURIComponent(text)}`;
-}
-
 /* ---------- Events ---------- */
 function bind() {
   document.addEventListener("click", (e) => {
@@ -159,7 +149,10 @@ function bind() {
     e.preventDefault();
     if (!state.cart.length) return;
     const f = new FormData(e.target);
-    window.open(buildWhatsAppLink(f.get("name").trim(), f.get("city").trim()), "_blank", "noopener");
+    window.open(buildWhatsAppUrl({
+      number: state.settings.whatsapp_number, template: state.settings.message_template,
+      name: f.get("name").trim(), city: f.get("city").trim(), cart: state.cart, money,
+    }), "_blank", "noopener");
   };
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") { document.querySelectorAll(".overlay").forEach((o) => (o.hidden = true)); openDrawer(false); }

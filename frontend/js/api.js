@@ -22,7 +22,17 @@ async function request(path, { method = "GET", body, token } = {}) {
   return res.status === 204 ? null : res.json();
 }
 
+async function upload(token, file) {
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch(API_URL + "/api/admin/upload", { method: "POST", body: fd, headers: { Authorization: `Bearer ${token}` } });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) { const e = new Error(data.detail || res.statusText); e.status = res.status; throw e; }
+  return data.url;
+}
+
 export const api = {
+  upload,
   products: () => request("/api/products"),
   settings: () => request("/api/settings"),
   login: (password) => request("/api/admin/login", { method: "POST", body: { password } }),

@@ -2,7 +2,7 @@ import json
 import sqlite3
 import threading
 
-from .schemas import Product, ProductIn
+from .schemas import DEFAULT_TEMPLATE, Product, ProductIn
 
 SEED = [
     ProductIn(
@@ -51,6 +51,7 @@ class Repository:
                     self._db.execute("INSERT INTO products (data) VALUES (?)", (p.model_dump_json(),))
             self._db.execute("INSERT OR IGNORE INTO settings VALUES ('whatsapp_number', '573000000000')")
             self._db.execute("INSERT OR IGNORE INTO settings VALUES ('currency', 'COP')")
+            self._db.execute("INSERT OR IGNORE INTO settings VALUES ('message_template', ?)", (DEFAULT_TEMPLATE,))
 
     @staticmethod
     def _to_product(row) -> Product:
