@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>KØDEX — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="top"><h1 class="logo">KØDEX</h1><span class="tag">ADMIN</span><a class="cart-btn" href="index.html">VER TIENDA</a></header>
+<main class="admin">
+  <section id="loginView" class="card form" style="max-width:380px">
+    <h2>Acceso</h2>
+    <input type="password" id="pw" placeholder="Contraseña">
+    <button class="btn red" id="loginBtn">ENTRAR</button>
+    <p class="err" id="loginErr"></p>
+  </section>
+
+  <section id="appView" hidden>
+    <div class="row" style="justify-content:space-between"><h2>Prendas</h2><button class="btn fit" id="logout">SALIR</button></div>
+    <p class="err" id="err"></p>
+    <div class="card" id="list"></div>
+
+    <h2 id="formTitle">Nueva prenda</h2>
+    <form class="card form" id="pform">
+      <div class="row">
+        <input name="ref" placeholder="Referencia (KDX-004)" required>
+        <input name="name" placeholder="Nombre" required>
+        <input name="price" type="number" min="0" placeholder="Precio" required>
+      </div>
+      <div class="row">
+        <select name="type"><option value="tee">Camiseta</option><option value="hoodie">Hoodie</option><option value="cap">Gorra</option></select>
+        <select name="graphic"><option value="sigil">Gráfico: Sigil</option><option value="fang">Gráfico: Fang</option><option value="eye">Gráfico: Eye</option></select>
+        <input name="sizes" placeholder="Tallas separadas por coma: S,M,L,XL" value="S,M,L,XL" required>
+        <label class="fit"><input type="checkbox" name="active" checked style="width:auto;margin:0"> Visible</label>
+      </div>
+      <p class="mono" style="margin:.6rem 0">COLORES (tela · tinta del gráfico)</p>
+      <div id="colors"></div>
+      <div class="row"><button type="button" class="btn fit" id="addColor">+ COLOR</button>
+        <button class="btn red fit" type="submit">GUARDAR</button>
+        <button type="button" class="btn fit" id="cancel" hidden>CANCELAR</button></div>
+    </form>
+
+    <h2>Ajustes</h2>
+    <form class="card form" id="sform">
+      <div class="row"><input name="whatsapp_number" placeholder="WhatsApp con código de país, sin + (573001112233)" required>
+        <input name="currency" placeholder="Moneda" maxlength="5"><button class="btn red fit">GUARDAR</button></div>
+    </form>
+  </section>
+</main>
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>

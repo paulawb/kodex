@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KØDEX — Tribal Dark Wear</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="top">
+  <h1 class="logo">KØDEX</h1>
+  <span class="tag">TRIBAL DARK WEAR · 2026</span>
+  <button id="cartBtn" class="cart-btn">BAG <b id="cartCount">0</b></button>
+</header>
+
+<main>
+  <p class="hint mono">← ARRASTRA / DESLIZA EL RACK →</p>
+  <section class="rack-wrap">
+    <div class="rack" id="rack"><div class="rail"></div><div class="items" id="items"></div></div>
+  </section>
+  <p id="status" class="mono center"></p>
+</main>
+
+<div class="overlay" id="viewer" hidden>
+  <div class="panel viewer">
+    <button class="close" data-close="viewer" aria-label="Cerrar">×</button>
+    <div class="stage">
+      <div class="flip" id="flip">
+        <div class="face front" id="faceFront"></div>
+        <div class="face back" id="faceBack"></div>
+      </div>
+      <div class="seg">
+        <button id="btnFront" class="on">FRONT</button>
+        <button id="btnBack">BACK</button>
+      </div>
+    </div>
+    <div class="info">
+      <p class="mono ref" id="vRef"></p>
+      <h2 id="vName"></h2>
+      <p class="price" id="vPrice"></p>
+      <p class="label mono">ACABADO · <span id="vColorName"></span></p>
+      <div class="swatches" id="vColors"></div>
+      <p class="label mono">TALLA <a href="#" id="guideLink">GUÍA DE TALLAS</a></p>
+      <div class="sizes" id="vSizes"></div>
+      <button class="cta" id="addBtn">AÑADIR A LA BOLSA</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="guide" hidden>
+  <div class="panel small">
+    <button class="close" data-close="guide" aria-label="Cerrar">×</button>
+    <h2>GUÍA DE TALLAS</h2>
+    <table class="mono">
+      <tr><th>Talla</th><th>Pecho (cm)</th><th>Largo (cm)</th></tr>
+      <tr><td>S</td><td>52</td><td>70</td></tr>
+      <tr><td>M</td><td>55</td><td>72</td></tr>
+      <tr><td>L</td><td>58</td><td>74</td></tr>
+      <tr><td>XL</td><td>61</td><td>76</td></tr>
+    </table>
+    <p class="mono note">Corte oversized. Medidas de la prenda plana.</p>
+  </div>
+</div>
+
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-head"><h2>TU BOLSA</h2><button class="close" data-close="drawer" aria-label="Cerrar">×</button></div>
+  <ul id="cartList"></ul>
+  <div class="total mono">TOTAL <b id="cartTotal">$0</b></div>
+  <form id="orderForm">
+    <input name="name" placeholder="Nombre" required maxlength="60">
+    <input name="city" placeholder="Ciudad" required maxlength="60">
+    <button class="cta wa" type="submit">PEDIR POR WHATSAPP</button>
+  </form>
+</aside>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

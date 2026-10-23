@@ -1,0 +1,89 @@
+:root{--bg:#d8c8a0;--bg2:#cdbb8e;--ink:#080808;--red:#d60e0e;--card:#e6d9b8}
+*{box-sizing:border-box;margin:0}
+body{background:radial-gradient(ellipse at top,#e0d2ab,var(--bg) 60%,var(--bg2));color:var(--ink);font-family:Inter,sans-serif;min-height:100vh;overflow-x:hidden}
+.mono{font-family:"Space Mono",monospace;font-size:.75rem;letter-spacing:.06em}
+.center{text-align:center;padding:1rem}
+button{font:inherit;cursor:pointer;color:inherit;background:none;border:0}
+.top{display:flex;align-items:center;gap:1rem;padding:1.2rem 2rem;border-bottom:2px solid var(--ink)}
+.logo{font-family:Cinzel,serif;font-weight:900;font-size:2rem;letter-spacing:.2em;color:var(--ink)}
+.tag{font-family:"Space Mono",monospace;font-size:.7rem;color:var(--red);flex:1}
+.cart-btn{font-family:"Space Mono",monospace;border:2px solid var(--ink);padding:.5rem 1rem}
+.cart-btn:hover{background:var(--ink);color:var(--bg)}
+.cart-btn b{color:var(--red)}
+.hint{text-align:center;padding:1rem;opacity:.7}
+
+.rack-wrap{overflow-x:auto;overflow-y:hidden;padding:0 4vw 3rem;cursor:grab;scrollbar-width:thin;scrollbar-color:var(--red) transparent;scroll-behavior:smooth}
+.rack-wrap:active{cursor:grabbing}
+.rack{position:relative;display:inline-block;min-width:100%;padding-top:30px}
+.rail{position:absolute;top:22px;left:0;right:0;height:10px;border-radius:5px;background:linear-gradient(#6b6b6b,#1c1c1c 60%,#444);box-shadow:0 6px 10px rgba(0,0,0,.35)}
+.items{display:flex;gap:2.5rem;padding:0 2rem;width:max-content}
+.hanger{display:flex;flex-direction:column;align-items:center;gap:.2rem;width:260px;transform-origin:50% 0;animation:idle 6s ease-in-out infinite;animation-delay:var(--d)}
+.hanger:hover{animation:sway 1.1s ease-in-out}
+.hanger.swing{animation:sway .7s ease-in-out}
+.hook{width:4px;height:26px;background:#222;position:relative}
+.hook::before{content:"";position:absolute;top:-6px;left:-10px;width:24px;height:12px;border:3px solid #222;border-bottom:0;border-radius:12px 12px 0 0}
+.cloth{display:block;width:100%;filter:drop-shadow(0 14px 10px rgba(0,0,0,.3))}
+.hname{font-family:Cinzel,serif;font-weight:700;letter-spacing:.1em;margin-top:.5rem}
+.ref{color:var(--red)}
+@keyframes idle{0%,100%{transform:rotate(-.6deg)}50%{transform:rotate(.6deg)}}
+@keyframes sway{0%{transform:rotate(0)}20%{transform:rotate(6deg)}45%{transform:rotate(-5deg)}70%{transform:rotate(3deg)}100%{transform:rotate(0)}}
+
+.overlay{position:fixed;inset:0;background:rgba(8,8,8,.6);display:grid;place-items:center;z-index:20;padding:1rem}
+.overlay[hidden]{display:none}
+.panel{background:var(--card);border:2px solid var(--ink);box-shadow:8px 8px 0 var(--red);position:relative;max-height:92vh;overflow:auto}
+.panel.viewer{display:grid;grid-template-columns:1.2fr 1fr;gap:2rem;padding:2rem;width:min(900px,100%)}
+.panel.small{padding:2rem;width:min(420px,100%)}
+.panel table{width:100%;margin:1rem 0;border-collapse:collapse}
+.panel th,.panel td{border-bottom:1px solid #0003;padding:.5rem;text-align:left}
+.note{opacity:.7}
+.close{position:absolute;top:.5rem;right:.8rem;font-size:1.8rem;z-index:2}
+.close:hover{color:var(--red)}
+.stage{display:flex;flex-direction:column;align-items:center;gap:1rem}
+.flip{width:100%;max-width:380px;aspect-ratio:300/320;position:relative;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.4,.1,.2,1);perspective:1000px;cursor:pointer}
+.flip.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden}
+.face.back{transform:rotateY(180deg)}
+.stage{perspective:1200px}
+.seg{display:flex;border:2px solid var(--ink)}
+.seg button{padding:.4rem 1.2rem;font-family:"Space Mono",monospace}
+.seg .on{background:var(--ink);color:var(--bg)}
+.info h2{font-family:Cinzel,serif;font-size:1.8rem;letter-spacing:.08em;margin:.2rem 0}
+.price{font-family:"Space Mono",monospace;font-size:1.2rem;margin-bottom:1rem}
+.label{margin:1rem 0 .5rem}
+.label a{color:var(--red);margin-left:.6rem}
+.swatches,.sizes{display:flex;gap:.6rem;flex-wrap:wrap}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid var(--ink);transition:transform .2s}
+.sw:hover{transform:scale(1.15)}
+.sw.on{outline:3px solid var(--red);outline-offset:2px}
+.sz{min-width:44px;padding:.5rem;border:2px solid var(--ink);font-family:"Space Mono",monospace}
+.sz.on{background:var(--ink);color:var(--bg)}
+.cta{width:100%;margin-top:1.5rem;padding:1rem;background:var(--red);color:#fff;font-family:"Space Mono",monospace;font-weight:700;letter-spacing:.1em;border:2px solid var(--ink)}
+.cta:hover{background:var(--ink)}
+.cta.wa{background:#0a7a3a}
+
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(400px,100%);background:var(--card);border-left:2px solid var(--ink);z-index:30;transform:translateX(105%);transition:transform .4s;display:flex;flex-direction:column;padding:1.5rem}
+.drawer.open{transform:none}
+.drawer-head{display:flex;justify-content:space-between;align-items:center;position:relative}
+.drawer h2{font-family:Cinzel,serif}
+#cartList{list-style:none;padding:0;flex:1;overflow:auto;margin:1rem 0}
+#cartList li{display:flex;justify-content:space-between;gap:1rem;padding:.8rem 0;border-bottom:1px solid #0003}
+.qty{display:flex;align-items:center;gap:.5rem;font-family:"Space Mono",monospace}
+.qty button{border:1px solid var(--ink);width:26px;height:26px}
+.total{display:flex;justify-content:space-between;padding:.8rem 0;font-size:1rem}
+#orderForm input,.form input,.form select{width:100%;padding:.7rem;margin-bottom:.6rem;border:2px solid var(--ink);background:#f1e8cf;font:inherit}
+
+@media(max-width:720px){.panel.viewer{grid-template-columns:1fr}.hanger{width:200px}.top{padding:1rem}}
+
+/* admin */
+.admin{max-width:1000px;margin:2rem auto;padding:0 1rem}
+.admin h2{font-family:Cinzel,serif;margin:1.5rem 0 .5rem}
+.card{background:var(--card);border:2px solid var(--ink);padding:1.2rem;margin-bottom:1rem}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.row>*{flex:1;min-width:120px}
+.row .fit{flex:0 0 auto;min-width:0}
+.btn{border:2px solid var(--ink);padding:.5rem 1rem;font-family:"Space Mono",monospace;background:var(--card)}
+.btn.red{background:var(--red);color:#fff}
+.btn:hover{background:var(--ink);color:#fff}
+.plist{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.6rem 0;border-bottom:1px solid #0003}
+.color-row input[type=color]{padding:0;height:40px;flex:0 0 50px;min-width:50px}
+.err{color:var(--red);font-family:"Space Mono",monospace}
