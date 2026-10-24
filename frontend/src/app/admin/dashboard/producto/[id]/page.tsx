@@ -4,9 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProductForm } from "@/components/admin/product-form";
 
-export default function ProductFormPage({ params }: { params: { id: string } }) {
+export default function ProductFormPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [isAuth, setIsAuth] = useState(false);
+  const [id, setId] = useState<string>("");
+
+  useEffect(() => {
+    params.then((p) => setId(p.id));
+  }, [params]);
 
   useEffect(() => {
     const pass = localStorage.getItem("kodex_admin_pass");
@@ -17,9 +22,9 @@ export default function ProductFormPage({ params }: { params: { id: string } }) 
     }
   }, [router]);
 
-  if (!isAuth) return null;
+  if (!isAuth || !id) return null;
 
-  const isNew = params.id === "nuevo";
+  const isNew = id === "nuevo";
 
   return (
     <div className="container mx-auto px-4 py-16 max-w-4xl">
@@ -31,7 +36,7 @@ export default function ProductFormPage({ params }: { params: { id: string } }) 
           {isNew ? "Añade un nuevo producto a la tienda" : "Modifica los datos del producto"}
         </p>
       </div>
-      <ProductForm id={isNew ? null : params.id} />
+      <ProductForm id={isNew ? null : id} />
     </div>
   );
 }
