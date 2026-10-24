@@ -1,17 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProductForm } from "@/components/admin/product-form";
 
 export default function ProductFormPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [isAuth, setIsAuth] = useState(false);
-  const [id, setId] = useState<string>("");
-
-  useEffect(() => {
-    params.then((p) => setId(p.id));
-  }, [params]);
 
   useEffect(() => {
     const pass = localStorage.getItem("kodex_admin_pass");
@@ -22,7 +18,7 @@ export default function ProductFormPage({ params }: { params: Promise<{ id: stri
     }
   }, [router]);
 
-  if (!isAuth || !id) return null;
+  if (!isAuth) return null;
 
   const isNew = id === "nuevo";
 
