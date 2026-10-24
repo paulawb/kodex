@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: kodex-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kodex_user
+      POSTGRES_PASSWORD: kodex_pass
+      POSTGRES_DB: kodex_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - kodex_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kodex_user -d kodex_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  kodex_pg_data:
