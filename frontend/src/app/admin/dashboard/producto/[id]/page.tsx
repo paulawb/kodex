@@ -1,12 +1,14 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { ProductForm } from "@/components/admin/product-form";
 
-export default function ProductFormPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function ProductFormPage() {
   const router = useRouter();
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
+
   const [isAuth, setIsAuth] = useState(false);
 
   useEffect(() => {
@@ -18,7 +20,7 @@ export default function ProductFormPage({ params }: { params: Promise<{ id: stri
     }
   }, [router]);
 
-  if (!isAuth) return null;
+  if (!isAuth || !id) return null;
 
   const isNew = id === "nuevo";
 
