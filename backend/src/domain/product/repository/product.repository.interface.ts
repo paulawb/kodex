@@ -5,8 +5,8 @@ export interface IProductRepository {
   findFeatured(): Promise<Product[]>;
   findBySlug(slug: string): Promise<Product | null>;
   findById(id: string): Promise<Product | null>;
-  create(product: Partial<Product>): Promise<Product>;
-  update(id: string, product: Partial<Product>): Promise<Product>;
+  create(product: any): Promise<Product>;
+  update(id: string, product: any): Promise<Product>;
   delete(id: string): Promise<void>;
 }
 
