@@ -1,3 +1,5 @@
+import { lookbookItems } from "@/config/lookbook";
+
 export function Lookbook() {
   return (
     <section className="py-20">
@@ -12,31 +14,23 @@ export function Lookbook() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="relative aspect-[4/5] overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
-            <img
-              src="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=800&h=1000&fit=crop"
-              alt="KØDEX lookbook 1"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-            <div className="absolute bottom-6 left-6 z-20">
-              <p className="text-2xl font-bold">URBAN</p>
-              <p className="text-sm text-muted-foreground">SIN CONCESIONES</p>
+          {lookbookItems.map((item) => (
+            <div
+              key={item.id}
+              className="relative aspect-[4/5] overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
+              <img
+                src={item.image}
+                alt={item.alt}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute bottom-6 left-6 z-20">
+                <p className="text-2xl font-bold">{item.title}</p>
+                <p className="text-sm text-muted-foreground">{item.subtitle}</p>
+              </div>
             </div>
-          </div>
-
-          <div className="relative aspect-[4/5] overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
-            <img
-              src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&h=1000&fit=crop"
-              alt="KØDEX lookbook 2"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-            <div className="absolute bottom-6 left-6 z-20">
-              <p className="text-2xl font-bold">ATTITUDE</p>
-              <p className="text-sm text-muted-foreground">ESCRIBE TU REGLA</p>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>
