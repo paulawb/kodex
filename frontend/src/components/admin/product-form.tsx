@@ -30,6 +30,21 @@ interface ColorForm {
 
 const AVAILABLE_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "28", "30", "32", "34", "36", "38"];
 
+const COLOR_PALETTE = [
+  "#000000", "#FFFFFF", "#FF0000", "#DC2626", "#B91C1C", "#991B1B",
+  "#F59E0B", "#D97706", "#B45309", "#92400E", "#78350F",
+  "#10B981", "#059669", "#047857", "#065F46", "#064E3B",
+  "#3B82F6", "#2563EB", "#1D4ED8", "#1E40AF", "#1E3A8A",
+  "#8B5CF6", "#7C3AED", "#6D28D9", "#5B21B6", "#4C1D95",
+  "#EC4899", "#DB2777", "#BE185D", "#9D174D", "#831843",
+  "#F97316", "#EA580C", "#C2410C", "#9A3412", "#7C2D12",
+  "#EAB308", "#CA8A04", "#A16207", "#854D0E", "#713F12",
+  "#6B7280", "#4B5563", "#374151", "#1F2937", "#111827",
+  "#A3A3A3", "#737373", "#525252", "#404040", "#262626",
+  "#D4D4D4", "#A1A1A1", "#22D3EE", "#06B6D4", "#0891B2",
+  "#84CC16", "#65A30D", "#4D7C0F", "#BE123C", "#E11D48",
+];
+
 export function ProductForm({ id }: ProductFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -343,30 +358,53 @@ export function ProductForm({ id }: ProductFormProps) {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Nombre del color *</Label>
-                      <Input
-                        value={color.name}
-                        onChange={(e) => updateColor(colorIndex, "name", e.target.value)}
-                        placeholder="Negro, Blanco, Rojo..."
-                        required
-                      />
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Nombre del color *</Label>
+                        <Input
+                          value={color.name}
+                          onChange={(e) => updateColor(colorIndex, "name", e.target.value)}
+                          placeholder="Negro, Blanco, Rojo..."
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Color seleccionado</Label>
+                        <div className="flex gap-2 items-center">
+                          <div
+                            className="w-10 h-10 rounded-md border-2 border-border"
+                            style={{ backgroundColor: color.hex }}
+                          />
+                          <Input
+                            value={color.hex}
+                            onChange={(e) => updateColor(colorIndex, "hex", e.target.value)}
+                            placeholder="#000000"
+                          />
+                          <Input
+                            type="color"
+                            value={color.hex}
+                            onChange={(e) => updateColor(colorIndex, "hex", e.target.value)}
+                            className="w-16 h-10 p-1"
+                          />
+                        </div>
+                      </div>
                     </div>
                     <div className="space-y-2">
-                      <Label>Color (código HEX)</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          type="color"
-                          value={color.hex}
-                          onChange={(e) => updateColor(colorIndex, "hex", e.target.value)}
-                          className="w-16 h-10 p-1"
-                        />
-                        <Input
-                          value={color.hex}
-                          onChange={(e) => updateColor(colorIndex, "hex", e.target.value)}
-                          placeholder="#000000"
-                        />
+                      <Label>Paleta de colores (click para seleccionar)</Label>
+                      <div className="flex flex-wrap gap-2 p-3 border rounded-md bg-muted/30">
+                        {COLOR_PALETTE.map((colorHex) => (
+                          <button
+                            key={colorHex}
+                            type="button"
+                            onClick={() => updateColor(colorIndex, "hex", colorHex)}
+                            className={`w-8 h-8 rounded-md border-2 transition-all hover:scale-110 ${
+                              color.hex === colorHex ? "border-primary ring-2 ring-primary/50" : "border-border"
+                            }`}
+                            style={{ backgroundColor: colorHex }}
+                            title={colorHex}
+                          />
+                        ))}
                       </div>
                     </div>
                   </div>
