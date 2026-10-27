@@ -1,37 +1,56 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { getProductBySlug } from "@/lib/api";
-import { Product } from "@/types/product";
+import { Product, ProductColor } from "@/types/product";
 import { useCartStore } from "@/store/cart-store";
 import { ShoppingBag } from "lucide-react";
 
 export function ProductDetail({ slug }: { slug: string }) {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedColor, setSelectedColor] = useState<ProductColor | null>(null);
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const addItem = useCartStore((state) => state.addItem);
-  const router = useRouter();
 
   useEffect(() => {
     getProductBySlug(slug)
       .then((data) => {
         setProduct(data);
-        if (data.sizes && data.sizes.length > 0) {
-          setSelectedSize(data.sizes[0]);
+        if (data.colors && data.colors.length > 0) {
+          const firstColor = data.colors[0];
+          setSelectedColor(firstColor);
+          if (firstColor.variants && firstColor.variants.length > 0) {
+            setSelectedSize(firstColor.variants[0].size);
+          }
         }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [slug]);
 
+  useEffect(() => {
+    setCurrentImageIndex(0);
+    if (selectedColor && selectedColor.variants && selectedColor.variants.length > 0) {
+      setSelectedSize(selectedColor.variants[0].size);
+    } else {
+      setSelectedSize("");
+    }
+  }, [selectedColor]);
+
   const handleAddToCart = () => {
-    if (!product) return;
-    if (!selectedSize && product.sizes.length > 0) {
+    if (!product || !selectedColor) return;
+    if (!selectedSize) {
       alert("Selecciona una talla");
+      return;
+    }
+
+    const variant = selectedColor.variants.find((v) => v.size === selectedSize);
+    if (variant && variant.stock <= 0) {
+      alert("Esta talla no está disponible");
       return;
     }
 
@@ -40,8 +59,9 @@ export function ProductDetail({ slug }: { slug: string }) {
       name: product.name,
       slug: product.slug,
       price: product.price,
-      image: product.images[0] || "/placeholder.jpg",
+      image: selectedColor.images[0] || "/placeholder.jpg",
       size: selectedSize,
+      color: selectedColor.name,
       quantity: quantity,
     });
 
@@ -65,22 +85,33 @@ export function ProductDetail({ slug }: { slug: string }) {
     );
   }
 
+  const images = selectedColor?.images || [];
+  const availableVariants = selectedColor?.variants || [];
+  const currentVariant = availableVariants.find((v) => v.size === selectedSize);
+  const isOutOfStock = currentVariant ? currentVariant.stock <= 0 : false;
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
       <div className="space-y-4">
         <div className="aspect-square overflow-hidden bg-accent">
           <img
-            src={product.images[0] || "/placeholder.jpg"}
+            src={images[currentImageIndex] || "/placeholder.jpg"}
             alt={product.name}
             className="w-full h-full object-cover"
           />
         </div>
-        {product.images.length > 1 && (
+        {images.length > 1 && (
           <div className="grid grid-cols-4 gap-4">
-            {product.images.slice(1).map((img, idx) => (
-              <div key={idx} className="aspect-square overflow-hidden bg-accent">
-                <img src={img} alt={`${product.name} ${idx + 2}`} className="w-full h-full object-cover" />
-              </div>
+            {images.map((img, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentImageIndex(idx)}
+                className={`aspect-square overflow-hidden bg-accent border-2 transition-colors ${
+                  currentImageIndex === idx ? "border-primary" : "border-transparent"
+                }`}
+              >
+                <img src={img} alt={`${product.name} ${idx + 1}`} className="w-full h-full object-cover" />
+              </button>
             ))}
           </div>
         )}
@@ -97,18 +128,43 @@ export function ProductDetail({ slug }: { slug: string }) {
           <p className="text-muted-foreground leading-relaxed">{product.description}</p>
         </div>
 
-        {product.sizes && product.sizes.length > 0 && (
+        {product.colors && product.colors.length > 0 && (
+          <div className="space-y-3">
+            <p className="text-sm font-semibold">COLOR: {selectedColor?.name}</p>
+            <div className="flex flex-wrap gap-2">
+              {product.colors.map((color) => (
+                <button
+                  key={color.id}
+                  onClick={() => setSelectedColor(color)}
+                  className={`px-4 py-2 border-2 rounded-md transition-colors ${
+                    selectedColor?.id === color.id
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <span className="text-sm font-medium">{color.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {availableVariants.length > 0 && (
           <div className="space-y-3">
             <p className="text-sm font-semibold">TALLA</p>
             <div className="flex flex-wrap gap-2">
-              {product.sizes.map((size) => (
+              {availableVariants.map((variant) => (
                 <Button
-                  key={size}
-                  variant={selectedSize === size ? "default" : "outline"}
-                  onClick={() => setSelectedSize(size)}
-                  className={selectedSize === size ? "bg-primary hover:bg-red-700" : ""}
+                  key={variant.id}
+                  variant={selectedSize === variant.size ? "default" : "outline"}
+                  onClick={() => setSelectedSize(variant.size)}
+                  disabled={variant.stock <= 0}
+                  className={`${selectedSize === variant.size ? "bg-primary hover:bg-red-700" : ""} ${
+                    variant.stock <= 0 ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
-                  {size}
+                  {variant.size}
+                  {variant.stock <= 0 && " (AGOTADO)"}
                 </Button>
               ))}
             </div>
@@ -130,6 +186,7 @@ export function ProductDetail({ slug }: { slug: string }) {
               variant="outline"
               size="icon"
               onClick={() => setQuantity(quantity + 1)}
+              disabled={currentVariant ? quantity >= currentVariant.stock : false}
             >
               +
             </Button>
@@ -140,14 +197,14 @@ export function ProductDetail({ slug }: { slug: string }) {
           onClick={handleAddToCart}
           size="lg"
           className="w-full bg-primary hover:bg-red-700 text-lg"
-          disabled={product.stock <= 0}
+          disabled={!selectedColor || availableVariants.length === 0 || isOutOfStock}
         >
           <ShoppingBag className="mr-2 h-5 w-5" />
-          {product.stock <= 0 ? "AGOTADO" : "AÑADIR AL CARRITO"}
+          {isOutOfStock || availableVariants.length === 0 ? "AGOTADO" : "AÑADIR AL CARRITO"}
         </Button>
 
-        {product.stock > 0 && product.stock < 10 && (
-          <p className="text-sm text-primary">¡Solo quedan {product.stock} unidades!</p>
+        {currentVariant && currentVariant.stock > 0 && currentVariant.stock < 10 && (
+          <p className="text-sm text-primary">¡Solo quedan {currentVariant.stock} unidades en esta talla!</p>
         )}
       </div>
     </div>
