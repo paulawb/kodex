@@ -96,7 +96,11 @@ export function ProductManager() {
                   </TableCell>
                   <TableCell>{product.category}</TableCell>
                   <TableCell>${product.price.toLocaleString("es-CO")}</TableCell>
-                  <TableCell>{product.stock}</TableCell>
+                  <TableCell>
+                    {product.colors?.reduce((total, color) => 
+                      total + (color.variants?.reduce((sum, v) => sum + (v.stock || 0), 0) || 0), 0
+                    ) || 0}
+                  </TableCell>
                   <TableCell>
                     {product.isFeatured ? (
                       <Badge className="bg-primary">Sí</Badge>
