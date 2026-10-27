@@ -47,25 +47,30 @@ export function FeaturedCollection() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {products.map((product) => (
-            <Link key={product.id} href={`/producto/${product.slug}`}>
-              <Card className="group overflow-hidden border-border hover:border-primary transition-all duration-300">
-                <div className="aspect-square overflow-hidden bg-accent">
-                  <img
-                    src={product.images[0] || "/placeholder.jpg"}
-                    alt={product.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
-                    {product.name}
-                  </h3>
-                  <p className="text-xl font-bold">${product.price.toLocaleString("es-CO")}</p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+          {products.map((product) => {
+            const mainImage = product.colors && product.colors.length > 0 && product.colors[0].images?.length > 0
+              ? product.colors[0].images[0]
+              : "/placeholder.jpg";
+            return (
+              <Link key={product.id} href={`/producto/${product.slug}`}>
+                <Card className="group overflow-hidden border-border hover:border-primary transition-all duration-300">
+                  <div className="aspect-square overflow-hidden bg-accent">
+                    <img
+                      src={mainImage}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <CardContent className="p-6">
+                    <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
+                      {product.name}
+                    </h3>
+                    <p className="text-xl font-bold">${product.price.toLocaleString("es-CO")}</p>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
         </div>
 
         <div className="text-center">
