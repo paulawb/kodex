@@ -33,6 +33,13 @@ export function ProductGrid() {
     );
   }
 
+  const getMainImage = (product: Product) => {
+    if (product.colors && product.colors.length > 0 && product.colors[0].images?.length > 0) {
+      return product.colors[0].images[0];
+    }
+    return "/placeholder.jpg";
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {products.map((product) => (
@@ -40,7 +47,7 @@ export function ProductGrid() {
           <Card className="group overflow-hidden border-border hover:border-primary transition-all duration-300 h-full">
             <div className="aspect-square overflow-hidden bg-accent">
               <img
-                src={product.images[0] || "/placeholder.jpg"}
+                src={getMainImage(product)}
                 alt={product.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
@@ -51,6 +58,11 @@ export function ProductGrid() {
               </h3>
               <p className="text-lg font-bold">${product.price.toLocaleString("es-CO")}</p>
               <p className="text-xs text-muted-foreground">{product.category}</p>
+              {product.colors && product.colors.length > 1 && (
+                <p className="text-xs text-muted-foreground">
+                  {product.colors.length} colores disponibles
+                </p>
+              )}
             </CardContent>
           </Card>
         </Link>
