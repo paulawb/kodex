@@ -12,7 +12,9 @@ export class PrismaProductRepository implements IProductRepository {
       include: {
         variants: true,
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: {
+        createdAt: 'asc' as const,
+      },
     },
   };
 
