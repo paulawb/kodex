@@ -9,11 +9,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { adminCreateProduct, adminUpdateProduct } from "@/lib/api";
 import Image from "next/image";
-import { Upload, X } from "lucide-react";
+import { Plus, Trash2, Upload, X } from "lucide-react";
 
 interface ProductFormProps {
   id: string | null;
 }
+
+interface Variant {
+  size: string;
+  stock: number;
+}
+
+interface ColorForm {
+  id?: string;
+  name: string;
+  hex: string;
+  images: string[];
+  variants: Variant[];
+}
+
+const AVAILABLE_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "28", "30", "32", "34", "36", "38"];
 
 export function ProductForm({ id }: ProductFormProps) {
   const router = useRouter();
@@ -22,15 +37,18 @@ export function ProductForm({ id }: ProductFormProps) {
     name: "",
     description: "",
     price: 0,
-    images: [] as string[],
     category: "",
-    sizes: "",
-    stock: 0,
     isFeatured: false,
   });
 
-  const [frontImage, setFrontImage] = useState<string>("");
-  const [backImage, setBackImage] = useState<string>("");
+  const [colors, setColors] = useState<ColorForm[]>([
+    {
+      name: "",
+      hex: "#000000",
+      images: [],
+      variants: [],
+    },
+  ]);
 
   useEffect(() => {
     if (id) {
@@ -57,17 +75,22 @@ export function ProductForm({ id }: ProductFormProps) {
                 name: product.name || "",
                 description: product.description || "",
                 price: product.price || 0,
-                images: product.images || [],
                 category: product.category || "",
-                sizes: Array.isArray(product.sizes) ? product.sizes.join(", ") : "",
-                stock: product.stock || 0,
                 isFeatured: product.isFeatured || false,
               });
-              if (product.images && product.images[0]) {
-                setFrontImage(product.images[0]);
-              }
-              if (product.images && product.images[1]) {
-                setBackImage(product.images[1]);
+              if (product.colors && product.colors.length > 0) {
+                setColors(
+                  product.colors.map((color: any) => ({
+                    id: color.id,
+                    name: color.name || "",
+                    hex: color.hex || "#000000",
+                    images: color.images || [],
+                    variants: (color.variants || []).map((v: any) => ({
+                      size: v.size,
+                      stock: v.stock || 0,
+                    })),
+                  }))
+                );
               }
             }
           }
@@ -88,43 +111,96 @@ export function ProductForm({ id }: ProductFormProps) {
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: "front" | "back") => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const addColor = () => {
+    setColors([
+      ...colors,
+      {
+        name: "",
+        hex: "#000000",
+        images: [],
+        variants: [],
+      },
+    ]);
+  };
+
+  const removeColor = (index: number) => {
+    if (colors.length === 1) {
+      alert("Debe haber al menos un color");
+      return;
+    }
+    setColors(colors.filter((_, i) => i !== index));
+  };
+
+  const updateColor = (index: number, field: keyof ColorForm, value: any) => {
+    const newColors = [...colors];
+    (newColors[index] as any)[field] = value;
+    setColors(newColors);
+  };
+
+  const handleImageUpload = (colorIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
 
     const validTypes = ["image/jpeg", "image/jpg", "image/png"];
-    if (!validTypes.includes(file.type)) {
-      alert("Solo se permiten archivos JPG, JPEG o PNG");
-      e.target.value = "";
-      return;
-    }
+    const maxSize = 5 * 1024 * 1024;
 
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      alert("La imagen no debe superar los 5MB");
-      e.target.value = "";
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = reader.result as string;
-      if (type === "front") {
-        setFrontImage(result);
-      } else {
-        setBackImage(result);
+    Array.from(files).forEach((file) => {
+      if (!validTypes.includes(file.type)) {
+        alert("Solo se permiten archivos JPG, JPEG o PNG");
+        return;
       }
-    };
-    reader.readAsDataURL(file);
+      if (file.size > maxSize) {
+        alert("Cada imagen no debe superar los 5MB");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setColors((prevColors) => {
+          const newColors = [...prevColors];
+          newColors[colorIndex].images.push(result);
+          return newColors;
+        });
+      };
+      reader.readAsDataURL(file);
+    });
     e.target.value = "";
   };
 
-  const removeImage = (type: "front" | "back") => {
-    if (type === "front") {
-      setFrontImage("");
-    } else {
-      setBackImage("");
-    }
+  const removeImage = (colorIndex: number, imageIndex: number) => {
+    setColors((prevColors) => {
+      const newColors = [...prevColors];
+      newColors[colorIndex].images = newColors[colorIndex].images.filter((_, i) => i !== imageIndex);
+      return newColors;
+    });
+  };
+
+  const addVariant = (colorIndex: number) => {
+    setColors((prevColors) => {
+      const newColors = [...prevColors];
+      newColors[colorIndex].variants.push({ size: "M", stock: 0 });
+      return newColors;
+    });
+  };
+
+  const updateVariant = (colorIndex: number, variantIndex: number, field: keyof Variant, value: any) => {
+    setColors((prevColors) => {
+      const newColors = [...prevColors];
+      newColors[colorIndex].variants[variantIndex] = {
+        ...newColors[colorIndex].variants[variantIndex],
+        [field]: field === "stock" ? Number(value) : value,
+      };
+      return newColors;
+    });
+  };
+
+  const removeVariant = (colorIndex: number, variantIndex: number) => {
+    setColors((prevColors) => {
+      const newColors = [...prevColors];
+      newColors[colorIndex].variants = newColors[colorIndex].variants.filter((_, i) => i !== variantIndex);
+      return newColors;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -135,24 +211,31 @@ export function ProductForm({ id }: ProductFormProps) {
       return;
     }
 
-    if (!frontImage) {
-      alert("Debes subir al menos la foto frontal de la camisa");
-      return;
+    for (let i = 0; i < colors.length; i++) {
+      if (!colors[i].name.trim()) {
+        alert(`Debes ingresar el nombre del color ${i + 1}`);
+        return;
+      }
+      if (colors[i].images.length === 0) {
+        alert(`Debes subir al menos una imagen para el color "${colors[i].name}"`);
+        return;
+      }
+      if (colors[i].variants.length === 0) {
+        alert(`Debes agregar al menos una talla con stock para el color "${colors[i].name}"`);
+        return;
+      }
     }
 
     setLoading(true);
     try {
-      const images: string[] = [];
-      if (frontImage) images.push(frontImage);
-      if (backImage) images.push(backImage);
-
       const data = {
         ...formData,
-        images: images,
-        sizes: formData.sizes
-          .split(",")
-          .map((size) => size.trim().toUpperCase())
-          .filter(Boolean),
+        colors: colors.map((color) => ({
+          name: color.name,
+          hex: color.hex,
+          images: color.images,
+          variants: color.variants.filter((v) => v.size && v.stock >= 0),
+        })),
       };
 
       if (id) {
@@ -175,13 +258,7 @@ export function ProductForm({ id }: ProductFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="name">Nombre del producto *</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
+              <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Categoría *</Label>
@@ -208,7 +285,7 @@ export function ProductForm({ id }: ProductFormProps) {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="price">Precio *</Label>
               <Input
@@ -220,143 +297,171 @@ export function ProductForm({ id }: ProductFormProps) {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="stock">Stock *</Label>
-              <Input
-                id="stock"
-                name="stock"
-                type="number"
-                value={formData.stock}
+            <div className="flex items-center space-x-2 pt-8">
+              <input
+                type="checkbox"
+                id="isFeatured"
+                name="isFeatured"
+                checked={formData.isFeatured}
                 onChange={handleChange}
-                required
+                className="w-4 h-4"
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="sizes">Tallas (separadas por coma)</Label>
-              <Input
-                id="sizes"
-                name="sizes"
-                value={formData.sizes}
-                onChange={handleChange}
-                placeholder="S, M, L, XL"
-              />
+              <Label htmlFor="isFeatured">Producto destacado</Label>
             </div>
           </div>
 
           <div className="space-y-4">
-            <div>
-              <Label>Fotos del producto *</Label>
-              <p className="text-sm text-muted-foreground mt-1">
-                Sube la foto frontal y trasera en formato JPG, JPEG o PNG (máximo 5MB cada una)
-              </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-lg">Colores, imágenes, tallas y stock *</Label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Agrega cada color con sus propias fotos, tallas disponibles y cantidad por talla
+                </p>
+              </div>
+              <Button type="button" onClick={addColor} variant="outline" size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Añadir color
+              </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Foto Frontal */}
-              <div className="space-y-2">
-                <Label htmlFor="frontImage">Foto frontal *</Label>
-                {frontImage ? (
-                  <div className="relative w-full aspect-square border rounded-lg overflow-hidden bg-muted">
-                    <Image
-                      src={frontImage}
-                      alt="Vista frontal"
-                      fill
-                      className="object-cover"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2"
-                      onClick={() => removeImage("front")}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+            {colors.map((color, colorIndex) => (
+              <Card key={colorIndex} className="border-2">
+                <CardContent className="p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-semibold">Color {colorIndex + 1}</h4>
+                    {colors.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeColor(colorIndex)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Eliminar color
+                      </Button>
+                    )}
                   </div>
-                ) : (
-                  <label
-                    htmlFor="frontImage"
-                    className="flex flex-col items-center justify-center w-full aspect-square border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <Upload className="h-10 w-10 mb-3 text-muted-foreground" />
-                      <p className="mb-2 text-sm text-muted-foreground text-center px-4">
-                        <span className="font-semibold">Click para subir</span>
-                      </p>
-                      <p className="text-xs text-muted-foreground">JPG, JPEG, PNG</p>
-                    </div>
-                    <input
-                      id="frontImage"
-                      type="file"
-                      className="hidden"
-                      accept="image/jpeg,image/jpg,image/png"
-                      onChange={(e) => handleImageUpload(e, "front")}
-                    />
-                  </label>
-                )}
-              </div>
 
-              {/* Foto Trasera */}
-              <div className="space-y-2">
-                <Label htmlFor="backImage">Foto trasera (opcional)</Label>
-                {backImage ? (
-                  <div className="relative w-full aspect-square border rounded-lg overflow-hidden bg-muted">
-                    <Image
-                      src={backImage}
-                      alt="Vista trasera"
-                      fill
-                      className="object-cover"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2"
-                      onClick={() => removeImage("back")}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Nombre del color *</Label>
+                      <Input
+                        value={color.name}
+                        onChange={(e) => updateColor(colorIndex, "name", e.target.value)}
+                        placeholder="Negro, Blanco, Rojo..."
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Color (código HEX)</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          type="color"
+                          value={color.hex}
+                          onChange={(e) => updateColor(colorIndex, "hex", e.target.value)}
+                          className="w-16 h-10 p-1"
+                        />
+                        <Input
+                          value={color.hex}
+                          onChange={(e) => updateColor(colorIndex, "hex", e.target.value)}
+                          placeholder="#000000"
+                        />
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <label
-                    htmlFor="backImage"
-                    className="flex flex-col items-center justify-center w-full aspect-square border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <Upload className="h-10 w-10 mb-3 text-muted-foreground" />
-                      <p className="mb-2 text-sm text-muted-foreground text-center px-4">
-                        <span className="font-semibold">Click para subir</span>
-                      </p>
-                      <p className="text-xs text-muted-foreground">JPG, JPEG, PNG</p>
-                    </div>
-                    <input
-                      id="backImage"
-                      type="file"
-                      className="hidden"
-                      accept="image/jpeg,image/jpg,image/png"
-                      onChange={(e) => handleImageUpload(e, "back")}
-                    />
-                  </label>
-                )}
-              </div>
-            </div>
-          </div>
 
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="isFeatured"
-              name="isFeatured"
-              checked={formData.isFeatured}
-              onChange={handleChange}
-              className="w-4 h-4"
-            />
-            <Label htmlFor="isFeatured">Producto destacado</Label>
+                  <div className="space-y-2">
+                    <Label>Fotos de este color * (JPG, JPEG, PNG)</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {color.images.map((img, imgIndex) => (
+                        <div key={imgIndex} className="relative aspect-square border rounded-lg overflow-hidden">
+                          <Image src={img} alt={`Color ${color.name} ${imgIndex + 1}`} fill className="object-cover" />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-1 right-1 h-6 w-6"
+                            onClick={() => removeImage(colorIndex, imgIndex)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                      <label className="flex flex-col items-center justify-center aspect-square border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                        <Upload className="h-6 w-6 mb-2 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground text-center px-2">Subir foto</span>
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/jpeg,image/jpg,image/png"
+                          multiple
+                          onChange={(e) => handleImageUpload(colorIndex, e)}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Tallas y stock por talla *</Label>
+                      <Button type="button" onClick={() => addVariant(colorIndex)} variant="outline" size="sm">
+                        <Plus className="h-3 w-3 mr-1" />
+                        Añadir talla
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {color.variants.map((variant, variantIndex) => (
+                        <div key={variantIndex} className="flex gap-2 items-end">
+                          <div className="flex-1 space-y-1">
+                            <Label className="text-xs">Talla</Label>
+                            <select
+                              value={variant.size}
+                              onChange={(e) => updateVariant(colorIndex, variantIndex, "size", e.target.value)}
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            >
+                              {AVAILABLE_SIZES.map((size) => (
+                                <option key={size} value={size}>
+                                  {size}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <Label className="text-xs">Stock</Label>
+                            <Input
+                              type="number"
+                              value={variant.stock}
+                              onChange={(e) => updateVariant(colorIndex, variantIndex, "stock", e.target.value)}
+                              min="0"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeVariant(colorIndex, variantIndex)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      {color.variants.length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-4 border rounded-md">
+                          No hay tallas agregadas. Haz clic en "Añadir talla"
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
           <div className="flex gap-4">
             <Button type="submit" className="bg-primary hover:bg-red-700" disabled={loading}>
-              {loading ? "GUARDANDO..." : id ? "ACTUALIZAR" : "CREAR PRODUCTO"}
+              {loading ? "GUARDANDO..." : id ? "ACTUALIZAR PRODUCTO" : "CREAR PRODUCTO"}
             </Button>
             <Button type="button" variant="outline" onClick={() => router.push("/admin/dashboard")}>
               CANCELAR
