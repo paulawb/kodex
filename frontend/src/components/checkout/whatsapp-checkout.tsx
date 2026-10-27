@@ -40,6 +40,9 @@ export function WhatsAppCheckout() {
     
     items.forEach((item, index) => {
       message += `${index + 1}. ${item.name}\n`;
+      if (item.color) {
+        message += `   Color: ${item.color}\n`;
+      }
       message += `   Talla: ${item.size}\n`;
       message += `   Cantidad: ${item.quantity}\n`;
       message += `   Precio unitario: $${item.price.toLocaleString("es-CO")}\n`;
@@ -134,12 +137,13 @@ export function WhatsAppCheckout() {
         </CardHeader>
         <CardContent className="space-y-4">
           {items.map((item) => (
-            <div key={`${item.id}-${item.size}`} className="flex gap-4 pb-4 border-b border-border">
+            <div key={`${item.id}-${item.size}-${item.color}`} className="flex gap-4 pb-4 border-b border-border">
               <div className="w-20 h-20 bg-accent overflow-hidden flex-shrink-0">
                 <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 space-y-1">
                 <h4 className="font-semibold text-sm">{item.name}</h4>
+                {item.color && <p className="text-xs text-muted-foreground">Color: {item.color}</p>}
                 <p className="text-xs text-muted-foreground">Talla: {item.size} | Cant: {item.quantity}</p>
                 <p className="font-semibold">${(item.price * item.quantity).toLocaleString("es-CO")}</p>
               </div>
