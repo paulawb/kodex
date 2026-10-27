@@ -75,7 +75,7 @@ export class PrismaProductRepository implements IProductRepository {
             },
           })),
         },
-      },
+      } as any,
       include: this.include,
     });
 
@@ -106,7 +106,7 @@ export class PrismaProductRepository implements IProductRepository {
             },
           })),
         },
-      },
+      } as any,
       include: this.include,
     });
 
