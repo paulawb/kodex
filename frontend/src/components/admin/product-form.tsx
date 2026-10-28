@@ -61,7 +61,7 @@ export function ProductForm({ id }: ProductFormProps) {
     {
       name: "",
       hex: "#000000",
-      images: [],
+      images: ["", ""],
       variants: [],
     },
   ]);
@@ -100,7 +100,7 @@ export function ProductForm({ id }: ProductFormProps) {
                     id: color.id,
                     name: color.name || "",
                     hex: color.hex || "#000000",
-                    images: color.images || [],
+                    images: [color.images?.[0] || "", color.images?.[1] || ""],
                     variants: (color.variants || []).map((v: any) => ({
                       size: v.size,
                       stock: v.stock || 0,
@@ -133,7 +133,7 @@ export function ProductForm({ id }: ProductFormProps) {
       {
         name: "",
         hex: "#000000",
-        images: [],
+        images: ["", ""],
         variants: [],
       },
     ]);
@@ -153,43 +153,38 @@ export function ProductForm({ id }: ProductFormProps) {
     setColors(newColors);
   };
 
-  const handleImageUpload = (colorIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (colorIndex: number, imageIndex: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
 
+    const file = files[0];
     const validTypes = ["image/jpeg", "image/jpg", "image/png"];
     const maxSize = 5 * 1024 * 1024;
 
-    Array.from(files).forEach((file) => {
-      if (!validTypes.includes(file.type)) {
-        alert("Solo se permiten archivos JPG, JPEG o PNG");
-        return;
-      }
-      if (file.size > maxSize) {
-        alert("Cada imagen no debe superar los 5MB");
-        return;
-      }
+    if (!validTypes.includes(file.type)) {
+      alert("Solo se permiten archivos JPG, JPEG o PNG");
+      e.target.value = "";
+      return;
+    }
+    if (file.size > maxSize) {
+      alert("Cada imagen no debe superar los 5MB");
+      e.target.value = "";
+      return;
+    }
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setColors((prevColors) => {
-          const newColors = [...prevColors];
-          newColors[colorIndex].images.push(result);
-          return newColors;
-        });
-      };
-      reader.readAsDataURL(file);
-    });
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      setColors((prevColors) => {
+        const newColors = [...prevColors];
+        const newImages = [...newColors[colorIndex].images];
+        newImages[imageIndex] = result;
+        newColors[colorIndex].images = newImages;
+        return newColors;
+      });
+    };
+    reader.readAsDataURL(file);
     e.target.value = "";
-  };
-
-  const removeImage = (colorIndex: number, imageIndex: number) => {
-    setColors((prevColors) => {
-      const newColors = [...prevColors];
-      newColors[colorIndex].images = newColors[colorIndex].images.filter((_, i) => i !== imageIndex);
-      return newColors;
-    });
   };
 
   const addVariant = (colorIndex: number) => {
@@ -232,8 +227,8 @@ export function ProductForm({ id }: ProductFormProps) {
         alert(`Debes ingresar el nombre del color ${i + 1}`);
         return;
       }
-      if (colors[i].images.length === 0) {
-        alert(`Debes subir al menos una imagen para el color "${colors[i].name}"`);
+      if (!colors[i].images[0] || !colors[i].images[1]) {
+        alert(`Debes subir la foto frontal y trasera para el color "${colors[i].name}"`);
         return;
       }
       if (colors[i].variants.length === 0) {
@@ -249,7 +244,7 @@ export function ProductForm({ id }: ProductFormProps) {
         colors: colors.map((color) => ({
           name: color.name,
           hex: color.hex,
-          images: color.images,
+          images: [color.images[0], color.images[1]].filter(Boolean),
           variants: color.variants.filter((v) => v.size && v.stock >= 0),
         })),
       };
@@ -411,33 +406,53 @@ export function ProductForm({ id }: ProductFormProps) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Fotos de este color * (JPG, JPEG, PNG)</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {color.images.map((img, imgIndex) => (
-                        <div key={imgIndex} className="relative aspect-square border rounded-lg overflow-hidden">
-                          <Image src={img} alt={`Color ${color.name} ${imgIndex + 1}`} fill className="object-cover" />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="icon"
-                            className="absolute top-1 right-1 h-6 w-6"
-                            onClick={() => removeImage(colorIndex, imgIndex)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
+                    <Label>Fotos de este color * (Delantero y Trasero - JPG, JPEG, PNG)</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {[0, 1].map((imgIndex) => (
+                        <div key={imgIndex} className="space-y-2">
+                          <Label className="text-xs">{imgIndex === 0 ? "Delantero *" : "Trasero *"}</Label>
+                          {color.images[imgIndex] ? (
+                            <div className="relative aspect-[3/4] border rounded-lg overflow-hidden">
+                              <Image
+                                src={color.images[imgIndex]}
+                                alt={`Color ${color.name} ${imgIndex === 0 ? "delantero" : "trasero"}`}
+                                fill
+                                className="object-cover"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute top-1 right-1 h-6 w-6"
+                                onClick={() => {
+                                  setColors((prevColors) => {
+                                    const newColors = [...prevColors];
+                                    const newImages = [...newColors[colorIndex].images];
+                                    newImages[imgIndex] = "";
+                                    newColors[colorIndex].images = newImages;
+                                    return newColors;
+                                  });
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <label className="flex flex-col items-center justify-center aspect-[3/4] border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                              <Upload className="h-6 w-6 mb-2 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground text-center px-2">
+                                Subir {imgIndex === 0 ? "delantero" : "trasero"}
+                              </span>
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept="image/jpeg,image/jpg,image/png"
+                                onChange={(e) => handleImageUpload(colorIndex, imgIndex, e)}
+                              />
+                            </label>
+                          )}
                         </div>
                       ))}
-                      <label className="flex flex-col items-center justify-center aspect-square border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                        <Upload className="h-6 w-6 mb-2 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground text-center px-2">Subir foto</span>
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/jpeg,image/jpg,image/png"
-                          multiple
-                          onChange={(e) => handleImageUpload(colorIndex, e)}
-                        />
-                      </label>
                     </div>
                   </div>
 
