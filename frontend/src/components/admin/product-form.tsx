@@ -46,7 +46,7 @@ const COLOR_PALETTE = [
 ];
 
 export function ProductForm({ id }: ProductFormProps) {
-  // v2 - colores por producto con tallas por color v2
+  // v2 - colores por producto con tallas por color v3 - solo delantero/trasero
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
