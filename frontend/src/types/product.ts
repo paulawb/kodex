@@ -18,6 +18,7 @@ export interface Product {
   slug: string;
   description: string;
   price: number;
+  originalPrice?: number | null;
   category: string;
   isFeatured: boolean;
   colors: ProductColor[];

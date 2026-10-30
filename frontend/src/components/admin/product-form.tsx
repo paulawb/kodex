@@ -53,6 +53,7 @@ export function ProductForm({ id }: ProductFormProps) {
     name: "",
     description: "",
     price: 0,
+    originalPrice: "" as any,
     category: "",
     isFeatured: false,
   });
@@ -91,6 +92,7 @@ export function ProductForm({ id }: ProductFormProps) {
                 name: product.name || "",
                 description: product.description || "",
                 price: product.price || 0,
+                originalPrice: product.originalPrice ?? "",
                 category: product.category || "",
                 isFeatured: product.isFeatured || false,
               });
@@ -123,7 +125,7 @@ export function ProductForm({ id }: ProductFormProps) {
     if (type === "checkbox") {
       setFormData({ ...formData, [name]: (e.target as HTMLInputElement).checked });
     } else {
-      setFormData({ ...formData, [name]: type === "number" ? Number(value) : value });
+      setFormData({ ...formData, [name]: value });
     }
   };
 
@@ -232,20 +234,28 @@ export function ProductForm({ id }: ProductFormProps) {
         return;
       }
       if (colors[i].variants.length === 0) {
-        alert(`Debes agregar al menos una talla con stock para el color "${colors[i].name}"`);
+        alert(`Debes agregar al menos una talla para el color "${colors[i].name}"`);
         return;
       }
     }
 
     setLoading(true);
     try {
-      const data = {
-        ...formData,
+      const data: any = {
+        name: formData.name,
+        description: formData.description,
+        price: Number(formData.price),
+        category: formData.category,
+        isFeatured: formData.isFeatured,
+        originalPrice: formData.originalPrice === "" || formData.originalPrice === null || formData.originalPrice === undefined ? null : Number(formData.originalPrice),
         colors: colors.map((color) => ({
           name: color.name,
           hex: color.hex,
           images: [color.images[0], color.images[1]].filter(Boolean),
-          variants: color.variants.filter((v) => v.size && v.stock >= 0),
+          variants: color.variants.map((v) => ({
+            size: v.size,
+            stock: Number(v.stock) || 0,
+          })),
         })),
       };
 
@@ -296,9 +306,20 @@ export function ProductForm({ id }: ProductFormProps) {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="price">Precio *</Label>
+              <Label htmlFor="originalPrice">Precio original (opcional)</Label>
+              <Input
+                id="originalPrice"
+                name="originalPrice"
+                type="number"
+                value={formData.originalPrice}
+                onChange={handleChange}
+                placeholder="Ej: 199000"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="price">Precio con descuento *</Label>
               <Input
                 id="price"
                 name="price"
@@ -320,6 +341,12 @@ export function ProductForm({ id }: ProductFormProps) {
               <Label htmlFor="isFeatured">Producto destacado</Label>
             </div>
           </div>
+          {formData.originalPrice && Number(formData.originalPrice) > Number(formData.price) && (
+            <p className="text-sm text-muted-foreground">
+              Vista previa: <span className="line-through text-muted-foreground">${Number(formData.originalPrice).toLocaleString("es-CO")}</span>{" "}
+              <span className="text-lg font-bold text-primary">${Number(formData.price).toLocaleString("es-CO")}</span>
+            </p>
+          )}
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -488,6 +515,7 @@ export function ProductForm({ id }: ProductFormProps) {
                               value={variant.stock}
                               onChange={(e) => updateVariant(colorIndex, variantIndex, "stock", e.target.value)}
                               min="0"
+                              placeholder="0"
                             />
                           </div>
                           <Button
