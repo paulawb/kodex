@@ -86,40 +86,41 @@ export class PrismaProductRepository implements IProductRepository {
   async update(id: string, product: any): Promise<Product> {
     const { colors = [], ...productData } = product;
 
-    await this.prisma.productColor.deleteMany({
-      where: { productId: id },
-    });
-
-    const updateData: any = {
-      category: productData.category,
-      isFeatured: productData.isFeatured || false,
-      colors: {
-        create: colors.map((color: any) => ({
-          name: color.name,
-          hex: color.hex || null,
-          images: color.images || [],
-          variants: {
-            create: (color.variants || []).map((variant: any) => ({
-              size: variant.size,
-              stock: variant.stock || 0,
-            })),
-          },
-        })),
-      },
-    };
+    const updateData: any = {};
 
     if (productData.name !== undefined) updateData.name = productData.name;
     if (productData.slug !== undefined) updateData.slug = productData.slug;
     if (productData.description !== undefined) updateData.description = productData.description;
-    if (productData.price !== undefined) updateData.price = productData.price;
-    if (productData.originalPrice !== undefined) updateData.originalPrice = productData.originalPrice;
+    if (productData.price !== undefined) updateData.price = Number(productData.price);
+    if (productData.originalPrice !== undefined) updateData.originalPrice = productData.originalPrice === null || productData.originalPrice === "" ? null : Number(productData.originalPrice);
     if (productData.category !== undefined) updateData.category = productData.category;
     if (productData.isFeatured !== undefined) updateData.isFeatured = productData.isFeatured;
 
-    const updated = await this.prisma.product.update({
-      where: { id },
-      data: updateData,
-      include: this.include,
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await tx.productColor.deleteMany({
+        where: { productId: id },
+      });
+
+      return tx.product.update({
+        where: { id },
+        data: {
+          ...updateData,
+          colors: {
+            create: (colors || []).map((color: any) => ({
+              name: color.name,
+              hex: color.hex || null,
+              images: Array.isArray(color.images) ? color.images.filter(Boolean) : [],
+              variants: {
+                create: (color.variants || []).map((variant: any) => ({
+                  size: variant.size,
+                  stock: Number(variant.stock) || 0,
+                })),
+              },
+            })),
+          },
+        },
+        include: this.include,
+      });
     });
 
     return this.toEntity(updated);
