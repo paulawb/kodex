@@ -36,7 +36,10 @@ export async function adminCreateProduct(password: string, data: any) {
     },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Error al crear producto");
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Error al crear producto");
+  }
   return res.json();
 }
 
@@ -49,7 +52,10 @@ export async function adminUpdateProduct(password: string, id: string, data: any
     },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Error al actualizar producto");
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Error al actualizar producto");
+  }
   return res.json();
 }
 

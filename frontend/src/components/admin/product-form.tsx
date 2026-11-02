@@ -265,8 +265,9 @@ export function ProductForm({ id }: ProductFormProps) {
         await adminCreateProduct(pass, data);
       }
       router.push("/admin/dashboard");
-    } catch (error) {
-      alert("Error al guardar producto");
+    } catch (error: any) {
+      console.error(error);
+      alert(error?.message || "Error al guardar producto");
     } finally {
       setLoading(false);
     }
