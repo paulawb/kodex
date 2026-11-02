@@ -91,10 +91,10 @@ export class PrismaProductRepository implements IProductRepository {
     if (productData.name !== undefined && productData.name !== null) updateData.name = productData.name;
     if (productData.slug !== undefined && productData.slug !== null) updateData.slug = productData.slug;
     if (productData.description !== undefined && productData.description !== null) updateData.description = productData.description;
-    if (productData.price !== undefined && productData.price !== null) updateData.price = Number(productData.price);
+    if (productData.price !== undefined && productData.price !== null && productData.price !== '') updateData.price = Number(productData.price);
     if (productData.originalPrice === null || productData.originalPrice === '') {
       updateData.originalPrice = null;
-    } else if (productData.originalPrice !== undefined) {
+    } else if (productData.originalPrice !== undefined && productData.originalPrice !== '') {
       updateData.originalPrice = Number(productData.originalPrice);
     }
     if (productData.category !== undefined && productData.category !== null) updateData.category = productData.category;
