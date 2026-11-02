@@ -60,6 +60,7 @@ export class PrismaProductRepository implements IProductRepository {
         slug: productData.slug,
         description: productData.description,
         price: productData.price,
+        originalPrice: productData.originalPrice ?? null,
         category: productData.category,
         isFeatured: productData.isFeatured || false,
         colors: {
@@ -89,24 +90,35 @@ export class PrismaProductRepository implements IProductRepository {
       where: { productId: id },
     });
 
+    const updateData: any = {
+      category: productData.category,
+      isFeatured: productData.isFeatured || false,
+      colors: {
+        create: colors.map((color: any) => ({
+          name: color.name,
+          hex: color.hex || null,
+          images: color.images || [],
+          variants: {
+            create: (color.variants || []).map((variant: any) => ({
+              size: variant.size,
+              stock: variant.stock || 0,
+            })),
+          },
+        })),
+      },
+    };
+
+    if (productData.name !== undefined) updateData.name = productData.name;
+    if (productData.slug !== undefined) updateData.slug = productData.slug;
+    if (productData.description !== undefined) updateData.description = productData.description;
+    if (productData.price !== undefined) updateData.price = productData.price;
+    if (productData.originalPrice !== undefined) updateData.originalPrice = productData.originalPrice;
+    if (productData.category !== undefined) updateData.category = productData.category;
+    if (productData.isFeatured !== undefined) updateData.isFeatured = productData.isFeatured;
+
     const updated = await this.prisma.product.update({
       where: { id },
-      data: {
-        ...productData,
-        colors: {
-          create: colors.map((color: any) => ({
-            name: color.name,
-            hex: color.hex || null,
-            images: color.images || [],
-            variants: {
-              create: (color.variants || []).map((variant: any) => ({
-                size: variant.size,
-                stock: variant.stock || 0,
-              })),
-            },
-          })),
-        },
-      } as any,
+      data: updateData,
       include: this.include,
     });
 
@@ -142,6 +154,7 @@ export class PrismaProductRepository implements IProductRepository {
       colors,
       p.createdAt,
       p.updatedAt,
+      p.originalPrice ?? null,
     );
   }
 }
