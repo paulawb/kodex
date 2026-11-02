@@ -92,35 +92,33 @@ export class PrismaProductRepository implements IProductRepository {
     if (productData.slug !== undefined) updateData.slug = productData.slug;
     if (productData.description !== undefined) updateData.description = productData.description;
     if (productData.price !== undefined) updateData.price = Number(productData.price);
-    if (productData.originalPrice !== undefined) updateData.originalPrice = productData.originalPrice === null || productData.originalPrice === "" ? null : Number(productData.originalPrice);
+    if (productData.originalPrice !== undefined) updateData.originalPrice = productData.originalPrice === null || productData.originalPrice === "" || productData.originalPrice === undefined ? null : Number(productData.originalPrice);
     if (productData.category !== undefined) updateData.category = productData.category;
-    if (productData.isFeatured !== undefined) updateData.isFeatured = productData.isFeatured;
+    if (productData.isFeatured !== undefined) updateData.isFeatured = Boolean(productData.isFeatured);
 
-    const updated = await this.prisma.$transaction(async (tx) => {
-      await tx.productColor.deleteMany({
-        where: { productId: id },
-      });
+    await this.prisma.productColor.deleteMany({
+      where: { productId: id },
+    });
 
-      return tx.product.update({
-        where: { id },
-        data: {
-          ...updateData,
-          colors: {
-            create: (colors || []).map((color: any) => ({
-              name: color.name,
-              hex: color.hex || null,
-              images: Array.isArray(color.images) ? color.images.filter(Boolean) : [],
-              variants: {
-                create: (color.variants || []).map((variant: any) => ({
-                  size: variant.size,
-                  stock: Number(variant.stock) || 0,
-                })),
-              },
-            })),
-          },
+    const updated = await this.prisma.product.update({
+      where: { id },
+      data: {
+        ...updateData,
+        colors: {
+          create: (Array.isArray(colors) ? colors : []).map((color: any) => ({
+            name: color.name || '',
+            hex: color.hex || null,
+            images: Array.isArray(color.images) ? color.images.filter((img: any) => typeof img === 'string' && img.length > 0) : [],
+            variants: {
+              create: (Array.isArray(color.variants) ? color.variants : []).map((variant: any) => ({
+                size: variant.size || '',
+                stock: Number(variant.stock) || 0,
+              })),
+            },
+          })),
         },
-        include: this.include,
-      });
+      },
+      include: this.include,
     });
 
     return this.toEntity(updated);
