@@ -266,8 +266,8 @@ export function ProductForm({ id }: ProductFormProps) {
       }
       router.push("/admin/dashboard");
     } catch (error: any) {
-      console.error(error);
-      alert(error?.message || "Error al guardar producto");
+      console.error("Error al guardar producto:", error);
+      alert(typeof error?.message === "string" ? error.message : "Error al guardar producto");
     } finally {
       setLoading(false);
     }
