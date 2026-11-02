@@ -10,15 +10,16 @@ export class UpdateProductUseCase {
   ) {}
 
   async execute(id: string, data: Partial<Product>): Promise<Product> {
-    if (data.name) {
-      const slug = data.name
+    const updateData: any = { ...(data as any) };
+    if (updateData.name && typeof updateData.name === 'string') {
+      const slug = updateData.name
         .toLowerCase()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/(^-|-$)+/g, '');
-      data.slug = slug;
+      updateData.slug = slug;
     }
-    return this.productRepository.update(id, data);
+    return this.productRepository.update(id, updateData);
   }
 }
