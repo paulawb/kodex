@@ -110,10 +110,14 @@ export class PrismaProductRepository implements IProductRepository {
           hex: color.hex || null,
           images: Array.isArray(color.images) ? color.images.filter((img: any) => typeof img === 'string' && img.length > 0) : [],
           variants: {
-            create: Array.isArray(color.variants) ? color.variants.map((variant: any) => ({
-              size: variant.size || '',
-              stock: Number(variant.stock) || 0,
-            })) : [],
+            create: Array.isArray(color.variants)
+              ? color.variants
+                  .filter((v: any) => v && v.size)
+                  .map((variant: any) => ({
+                    size: String(variant.size),
+                    stock: Number(variant.stock) || 0,
+                  }))
+              : [],
           },
         })),
       };
