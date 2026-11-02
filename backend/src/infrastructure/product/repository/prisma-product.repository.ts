@@ -84,40 +84,44 @@ export class PrismaProductRepository implements IProductRepository {
   }
 
   async update(id: string, product: any): Promise<Product> {
-    const { colors = [], ...productData } = product;
+    const { colors, ...productData } = product;
 
     const updateData: any = {};
 
-    if (productData.name !== undefined) updateData.name = productData.name;
-    if (productData.slug !== undefined) updateData.slug = productData.slug;
-    if (productData.description !== undefined) updateData.description = productData.description;
-    if (productData.price !== undefined) updateData.price = Number(productData.price);
-    if (productData.originalPrice !== undefined) updateData.originalPrice = productData.originalPrice === null || productData.originalPrice === "" || productData.originalPrice === undefined ? null : Number(productData.originalPrice);
-    if (productData.category !== undefined) updateData.category = productData.category;
-    if (productData.isFeatured !== undefined) updateData.isFeatured = Boolean(productData.isFeatured);
+    if (productData.name !== undefined && productData.name !== null) updateData.name = productData.name;
+    if (productData.slug !== undefined && productData.slug !== null) updateData.slug = productData.slug;
+    if (productData.description !== undefined && productData.description !== null) updateData.description = productData.description;
+    if (productData.price !== undefined && productData.price !== null) updateData.price = Number(productData.price);
+    if (productData.originalPrice === null || productData.originalPrice === '') {
+      updateData.originalPrice = null;
+    } else if (productData.originalPrice !== undefined) {
+      updateData.originalPrice = Number(productData.originalPrice);
+    }
+    if (productData.category !== undefined && productData.category !== null) updateData.category = productData.category;
+    if (productData.isFeatured !== undefined && productData.isFeatured !== null) updateData.isFeatured = Boolean(productData.isFeatured);
 
-    await this.prisma.productColor.deleteMany({
-      where: { productId: id },
-    });
+    if (Array.isArray(colors)) {
+      await this.prisma.productColor.deleteMany({
+        where: { productId: id },
+      });
+      updateData.colors = {
+        create: colors.map((color: any) => ({
+          name: color.name || '',
+          hex: color.hex || null,
+          images: Array.isArray(color.images) ? color.images.filter((img: any) => typeof img === 'string' && img.length > 0) : [],
+          variants: {
+            create: Array.isArray(color.variants) ? color.variants.map((variant: any) => ({
+              size: variant.size || '',
+              stock: Number(variant.stock) || 0,
+            })) : [],
+          },
+        })),
+      };
+    }
 
     const updated = await this.prisma.product.update({
       where: { id },
-      data: {
-        ...updateData,
-        colors: {
-          create: (Array.isArray(colors) ? colors : []).map((color: any) => ({
-            name: color.name || '',
-            hex: color.hex || null,
-            images: Array.isArray(color.images) ? color.images.filter((img: any) => typeof img === 'string' && img.length > 0) : [],
-            variants: {
-              create: (Array.isArray(color.variants) ? color.variants : []).map((variant: any) => ({
-                size: variant.size || '',
-                stock: Number(variant.stock) || 0,
-              })),
-            },
-          })),
-        },
-      },
+      data: updateData,
       include: this.include,
     });
 
