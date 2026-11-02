@@ -65,7 +65,12 @@ export function FeaturedCollection() {
                     <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
                       {product.name}
                     </h3>
-                    <p className="text-xl font-bold">${product.price.toLocaleString("es-CO")}</p>
+                    <div className="flex items-center gap-2">
+                      {product.originalPrice && product.originalPrice > product.price && (
+                        <span className="text-sm text-muted-foreground line-through">${product.originalPrice.toLocaleString("es-CO")}</span>
+                      )}
+                      <p className="text-xl font-bold">${product.price.toLocaleString("es-CO")}</p>
+                    </div>
                   </CardContent>
                 </Card>
               </Link>

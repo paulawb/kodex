@@ -56,7 +56,12 @@ export function ProductGrid() {
               <h3 className="font-semibold group-hover:text-primary transition-colors line-clamp-2">
                 {product.name}
               </h3>
-              <p className="text-lg font-bold">${product.price.toLocaleString("es-CO")}</p>
+              <div className="flex items-center gap-2">
+                {product.originalPrice && product.originalPrice > product.price && (
+                  <span className="text-sm text-muted-foreground line-through">${product.originalPrice.toLocaleString("es-CO")}</span>
+                )}
+                <p className="text-lg font-bold">${product.price.toLocaleString("es-CO")}</p>
+              </div>
               <p className="text-xs text-muted-foreground">{product.category}</p>
               {product.colors && product.colors.length > 1 && (
                 <p className="text-xs text-muted-foreground">

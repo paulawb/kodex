@@ -121,7 +121,12 @@ export function ProductDetail({ slug }: { slug: string }) {
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground uppercase tracking-wider">{product.category}</p>
           <h1 className="text-3xl md:text-5xl font-bold tracking-tighter">{product.name}</h1>
-          <p className="text-2xl md:text-3xl font-bold">${product.price.toLocaleString("es-CO")}</p>
+          <div className="flex items-center gap-3">
+            {product.originalPrice && product.originalPrice > product.price && (
+              <span className="text-xl md:text-2xl text-muted-foreground line-through">${product.originalPrice.toLocaleString("es-CO")}</span>
+            )}
+            <p className="text-2xl md:text-3xl font-bold">${product.price.toLocaleString("es-CO")}</p>
+          </div>
         </div>
 
         <div className="space-y-4">
