@@ -101,6 +101,9 @@ export class PrismaProductRepository implements IProductRepository {
     if (productData.isFeatured !== undefined && productData.isFeatured !== null) updateData.isFeatured = Boolean(productData.isFeatured);
 
     if (Array.isArray(colors)) {
+      await this.prisma.productVariant.deleteMany({
+        where: { color: { productId: id } },
+      });
       await this.prisma.productColor.deleteMany({
         where: { productId: id },
       });
