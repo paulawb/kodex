@@ -31,7 +31,8 @@ export class AdminController {
   }
 
   @Delete('products/:id')
-  delete(@Param('id') id: string) {
-    return this.deleteProductUseCase.execute(id);
+  async delete(@Param('id') id: string) {
+    await this.deleteProductUseCase.execute(id);
+    return { success: true };
   }
 }
