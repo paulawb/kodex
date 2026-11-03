@@ -136,22 +136,13 @@ export class PrismaProductRepository implements IProductRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.prisma.$transaction(async (tx) => {
-      const colors = await tx.productColor.findMany({
-        where: { productId: id },
-        select: { id: true },
-      });
-      const colorIds = colors.map((c) => c.id);
-      if (colorIds.length > 0) {
-        await tx.productVariant.deleteMany({
-          where: { colorId: { in: colorIds } },
-        });
-        await tx.productColor.deleteMany({
-          where: { id: { in: colorIds } },
-        });
-      }
-      await tx.product.delete({ where: { id } });
+    await this.prisma.productVariant.deleteMany({
+      where: { color: { productId: id } },
     });
+    await this.prisma.productColor.deleteMany({
+      where: { productId: id },
+    });
+    await this.prisma.product.delete({ where: { id } });
   }
 
   private toEntity(p: any): Product {
