@@ -40,8 +40,9 @@ export function ProductManager() {
     try {
       await adminDeleteProduct(pass, id);
       loadProducts();
-    } catch (error) {
-      alert("Error al eliminar producto");
+    } catch (error: any) {
+      console.error(error);
+      alert(typeof error?.message === "string" ? error.message : "Error al eliminar producto");
     }
   };
 
