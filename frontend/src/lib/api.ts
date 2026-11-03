@@ -64,6 +64,13 @@ export async function adminDeleteProduct(password: string, id: string) {
     method: "DELETE",
     headers: { "x-admin-password": password },
   });
-  if (!res.ok) throw new Error("Error al eliminar producto");
-  return res.json();
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || "Error al eliminar producto");
+  }
+  try {
+    return await res.json();
+  } catch {
+    return { success: true };
+  }
 }
