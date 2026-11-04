@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { adminCreateProduct, adminUpdateProduct } from "@/lib/api";
+import { getAdminPass } from "@/lib/admin-auth";
 import Image from "next/image";
 import { Plus, Trash2, Upload, X } from "lucide-react";
 
@@ -70,7 +71,7 @@ export function ProductForm({ id }: ProductFormProps) {
   useEffect(() => {
     if (id) {
       const loadProduct = async () => {
-        const pass = localStorage.getItem("kodex_admin_pass");
+        const pass = getAdminPass();
         if (!pass) {
           router.push("/adminmp/login");
           return;
@@ -218,7 +219,7 @@ export function ProductForm({ id }: ProductFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const pass = localStorage.getItem("kodex_admin_pass");
+    const pass = getAdminPass();
     if (!pass) {
       router.push("/adminmp/login");
       return;

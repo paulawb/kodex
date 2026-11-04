@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ProductForm } from "@/components/admin/product-form";
+import { getAdminPass } from "@/lib/admin-auth";
 
 export default function ProductFormPage() {
   const router = useRouter();
@@ -12,7 +13,7 @@ export default function ProductFormPage() {
   const [isAuth, setIsAuth] = useState(false);
 
   useEffect(() => {
-    const pass = localStorage.getItem("kodex_admin_pass");
+    const pass = getAdminPass();
     if (!pass) {
       router.push("/adminmp/login");
     } else {

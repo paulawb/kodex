@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { adminGetSiteSettings, adminUpdateSiteSettings, SiteSettings } from "@/lib/api";
+import { getAdminPass } from "@/lib/admin-auth";
 import { ImagePlus, Trash2, Save, ArrowLeft } from "lucide-react";
 
 const MAX_FILE_MB = 10;
@@ -78,7 +79,7 @@ export default function AppearancePage() {
   });
 
   useEffect(() => {
-    const pass = localStorage.getItem("kodex_admin_pass");
+    const pass = getAdminPass();
     if (!pass) {
       router.push("/adminmp/login");
       return;
@@ -110,7 +111,7 @@ export default function AppearancePage() {
   };
 
   const handleSave = async () => {
-    const pass = localStorage.getItem("kodex_admin_pass");
+    const pass = getAdminPass();
     if (!pass) {
       router.push("/adminmp/login");
       return;

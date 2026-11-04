@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { adminGetProducts, adminDeleteProduct } from "@/lib/api";
+import { getAdminPass } from "@/lib/admin-auth";
 import { Product } from "@/types/product";
 import { Edit, Trash2 } from "lucide-react";
 
@@ -16,7 +17,7 @@ export function ProductManager() {
   const router = useRouter();
 
   const loadProducts = async () => {
-    const pass = localStorage.getItem("kodex_admin_pass");
+    const pass = getAdminPass();
     if (!pass) return;
     try {
       const data = await adminGetProducts(pass);
@@ -35,7 +36,7 @@ export function ProductManager() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("¿Estás seguro de eliminar este producto?")) return;
-    const pass = localStorage.getItem("kodex_admin_pass");
+    const pass = getAdminPass();
     if (!pass) return;
     try {
       await adminDeleteProduct(pass, id);

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { clearAdminPass } from "@/lib/admin-auth";
 import { LogOut, Package, Image, Store } from "lucide-react";
 
 export function AdminHeader() {
@@ -12,7 +13,7 @@ export function AdminHeader() {
   if (pathname === "/adminmp/login") return null;
 
   const handleLogout = () => {
-    localStorage.removeItem("kodex_admin_pass");
+    clearAdminPass();
     router.push("/adminmp/login");
   };
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ProductManager } from "@/components/admin/product-manager";
+import { getAdminPass } from "@/lib/admin-auth";
 import { Image, Plus } from "lucide-react";
 
 export default function AdminDashboardPage() {
@@ -11,7 +12,7 @@ export default function AdminDashboardPage() {
   const [isAuth, setIsAuth] = useState(false);
 
   useEffect(() => {
-    const pass = localStorage.getItem("kodex_admin_pass");
+    const pass = getAdminPass();
     if (!pass) {
       router.push("/adminmp/login");
     } else {
