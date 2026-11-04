@@ -1,5 +1,23 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
+async function errorMessage(res: Response, fallback: string) {
+  try {
+    const text = await res.text();
+    if (!text) return fallback;
+    try {
+      const json = JSON.parse(text);
+      const msg = json?.message;
+      if (Array.isArray(msg)) return msg.join(", ");
+      if (typeof msg === "string" && msg) return msg;
+      return text;
+    } catch {
+      return text;
+    }
+  } catch {
+    return fallback;
+  }
+}
+
 export async function getProducts() {
   const res = await fetch(`${API_URL}/products`, { cache: "no-store" });
   if (!res.ok) throw new Error("Error al obtener productos");
@@ -37,8 +55,7 @@ export async function adminCreateProduct(password: string, data: any) {
     body: JSON.stringify(data),
   });
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || "Error al crear producto");
+    throw new Error(await errorMessage(res, "Error al crear producto"));
   }
   return res.json();
 }
@@ -53,8 +70,7 @@ export async function adminUpdateProduct(password: string, id: string, data: any
     body: JSON.stringify(data),
   });
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || "Error al actualizar producto");
+    throw new Error(await errorMessage(res, "Error al actualizar producto"));
   }
   return res.json();
 }
@@ -65,8 +81,7 @@ export async function adminDeleteProduct(password: string, id: string) {
     headers: { "x-admin-password": password },
   });
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || "Error al eliminar producto");
+    throw new Error(await errorMessage(res, "Error al eliminar producto"));
   }
   try {
     return await res.json();
