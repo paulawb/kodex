@@ -59,7 +59,7 @@ export function ProductDetail({ slug }: { slug: string }) {
       name: product.name,
       slug: product.slug,
       price: product.price,
-      image: selectedColor.images[0] || "/placeholder.jpg",
+      image: selectedColor.images[0] || "/placeholder.svg",
       size: selectedSize,
       color: selectedColor.name,
       quantity: quantity,
@@ -95,7 +95,7 @@ export function ProductDetail({ slug }: { slug: string }) {
       <div className="space-y-4">
         <div className="aspect-square overflow-hidden bg-accent">
           <img
-            src={images[currentImageIndex] || "/placeholder.jpg"}
+            src={images[currentImageIndex] || "/placeholder.svg"}
             alt={product.name}
             className="w-full h-full object-cover"
           />

@@ -50,7 +50,7 @@ export function FeaturedCollection() {
           {products.map((product) => {
             const mainImage = product.colors && product.colors.length > 0 && product.colors[0].images?.length > 0
               ? product.colors[0].images[0]
-              : "/placeholder.jpg";
+              : "/placeholder.svg";
             return (
               <Link key={product.id} href={`/producto/${product.slug}`}>
                 <Card className="group overflow-hidden border-border hover:border-primary transition-all duration-300">

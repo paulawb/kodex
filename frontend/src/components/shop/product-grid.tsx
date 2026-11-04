@@ -37,7 +37,7 @@ export function ProductGrid() {
     if (product.colors && product.colors.length > 0 && product.colors[0].images?.length > 0) {
       return product.colors[0].images[0];
     }
-    return "/placeholder.jpg";
+    return "/placeholder.svg";
   };
 
   return (

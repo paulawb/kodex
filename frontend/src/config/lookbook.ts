@@ -1,6 +1,8 @@
 export interface LookbookItem {
   id: number;
-  image: string;
+  /** Opcional: ruta local dentro de /public (ej: "/lookbook/1.jpg").
+   *  Si se deja vacío, se usan las fotos de los productos de la tienda. */
+  image?: string;
   alt: string;
   title: string;
   subtitle: string;
@@ -9,14 +11,14 @@ export interface LookbookItem {
 export const lookbookItems: LookbookItem[] = [
   {
     id: 1,
-    image: "https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=800&h=1000&fit=crop",
+    image: "",
     alt: "KØDEX lookbook 1",
     title: "URBAN",
     subtitle: "SIN CONCESIONES",
   },
   {
     id: 2,
-    image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&h=1000&fit=crop",
+    image: "",
     alt: "KØDEX lookbook 2",
     title: "ATTITUDE",
     subtitle: "ESCRIBE TU REGLA",
