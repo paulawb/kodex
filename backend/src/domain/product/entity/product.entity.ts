@@ -28,5 +28,6 @@ export class Product {
     public colors: ProductColor[],
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
+    public originalPrice?: number | null,
   ) {}
 }
