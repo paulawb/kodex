@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/store/cart-store";
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 
 export function CartDrawer() {
   const [open, setOpen] = useState(false);
@@ -21,6 +21,15 @@ export function CartDrawer() {
   const handleCheckout = () => {
     setOpen(false);
     router.push("/checkout");
+  };
+
+  const handleBack = () => {
+    setOpen(false);
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/tienda");
+    }
   };
 
   return (
@@ -104,7 +113,11 @@ export function CartDrawer() {
               <Button onClick={handleCheckout} className="w-full bg-primary hover:bg-red-700" size="lg">
                 FINALIZAR COMPRA
               </Button>
-              <Button onClick={() => setOpen(false)} variant="outline" className="w-full">
+              <Button onClick={handleBack} variant="outline" className="w-full">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                VOLVER A DONDE ESTABA
+              </Button>
+              <Button onClick={() => setOpen(false)} variant="ghost" className="w-full text-muted-foreground">
                 SEGUIR COMPRANDO
               </Button>
             </div>

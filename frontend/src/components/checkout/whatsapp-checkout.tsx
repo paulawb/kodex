@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCartStore } from "@/store/cart-store";
-import { MessageCircle } from "lucide-react";
+import { ArrowLeft, MessageCircle } from "lucide-react";
 
 export function WhatsAppCheckout() {
   const { items, getTotalPrice, clearCart } = useCartStore();
@@ -20,8 +20,22 @@ export function WhatsAppCheckout() {
     note: "",
   });
 
+  useEffect(() => {
+    if (items.length === 0) {
+      router.push("/tienda");
+    }
+  }, [items.length, router]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/tienda");
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -68,7 +82,6 @@ export function WhatsAppCheckout() {
   };
 
   if (items.length === 0) {
-    router.push("/tienda");
     return null;
   }
 
@@ -126,6 +139,15 @@ export function WhatsAppCheckout() {
             <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" size="lg">
               <MessageCircle className="mr-2 h-5 w-5" />
               ENVIAR PEDIDO POR WHATSAPP
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleBack}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              VOLVER A DONDE ESTABA
             </Button>
           </form>
         </CardContent>
