@@ -1,0 +1,9 @@
+Carpeta para imágenes fijas del sitio (lookbook, banner, hero).
+
+Cómo usarla:
+1. Copia tus fotos aquí (JPG o PNG).
+2. Usa rutas como "/lookbook/mi-foto.jpg" en el código o configúralas en:
+   frontend/src/config/lookbook.ts  ->  image: "/lookbook/mi-foto.jpg"
+
+Nota: las fotos de los PRODUCTOS no van aquí.
+Esas se suben desde el panel admin (/admin/dashboard) y se guardan en la base de datos.
