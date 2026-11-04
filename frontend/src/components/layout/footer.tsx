@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border bg-background">
       <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="space-y-4">
             <Link href="/" className="flex items-center space-x-2">
               <span className="text-2xl font-bold tracking-tighter">
@@ -34,20 +34,6 @@ export function Footer() {
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   Tienda
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold">INFORMACIÓN</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link
-                  href="/admin/login"
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Admin
                 </Link>
               </li>
             </ul>
