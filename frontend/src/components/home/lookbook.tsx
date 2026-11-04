@@ -24,6 +24,7 @@ function productPhotos(products: Product[]): string[] {
 
 export function Lookbook() {
   const [photos, setPhotos] = useState<string[]>([]);
+  const [failed, setFailed] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     getProducts()
@@ -32,9 +33,16 @@ export function Lookbook() {
   }, []);
 
   const items = lookbookItems.map((item, index) => {
-    const configured = typeof item.image === "string" ? item.image : "";
+    const configured =
+      typeof item.image === "string" && item.image.startsWith("/") ? item.image : "";
     const fromStore = photos[index] || "";
-    const image = fromStore || (configured.startsWith("/") ? configured : "") || FALLBACK_IMAGE;
+
+    // 1º foto configurada (si existe), 2º foto de un producto, 3º imagen de marca.
+    const image =
+      configured && !failed[item.id]
+        ? configured
+        : fromStore || FALLBACK_IMAGE;
+
     return { ...item, image };
   });
 
@@ -55,18 +63,15 @@ export function Lookbook() {
             <Link
               key={item.id}
               href="/tienda"
-              className="relative aspect-[4/5] overflow-hidden group block"
+              className="relative aspect-[4/5] overflow-hidden group block bg-accent"
             >
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10" />
               <img
                 src={item.image}
                 alt={item.alt}
-                onError={(event) => {
-                  const img = event.currentTarget;
-                  if (!img.src.endsWith(FALLBACK_IMAGE)) {
-                    img.src = FALLBACK_IMAGE;
-                  }
-                }}
+                onError={() =>
+                  setFailed((prev) => ({ ...prev, [item.id]: true }))
+                }
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute bottom-6 left-6 z-20">
