@@ -9,6 +9,6 @@ export interface HeroConfig {
 }
 
 export const heroConfig: HeroConfig = {
-  image: "",
+  image: "/lookbook/banner.jpg",
   overlay: 0.72,
 };

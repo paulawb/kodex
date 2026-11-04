@@ -22,23 +22,56 @@ function firstProductPhoto(products: Product[]): string {
 }
 
 export function Hero() {
-  const [background, setBackground] = useState(
-    heroConfig.image && heroConfig.image.startsWith("/") ? heroConfig.image : ""
-  );
+  const [bannerFailed, setBannerFailed] = useState(false);
+  const [productPhoto, setProductPhoto] = useState("");
+
+  const banner = heroConfig.image && !bannerFailed ? heroConfig.image : "";
 
   useEffect(() => {
-    if (background) return;
+    if (banner) return;
     getProducts()
-      .then((products: Product[]) => setBackground(firstProductPhoto(products)))
-      .catch(() => setBackground(""));
-  }, [background]);
+      .then((products: Product[]) => setProductPhoto(firstProductPhoto(products)))
+      .catch(() => setProductPhoto(""));
+  }, [banner]);
+
+  // Modo banner: la imagen completa se ve en cualquier dispositivo (sin recortes).
+  if (banner) {
+    return (
+      <section className="w-full bg-black">
+        <img
+          src={banner}
+          alt="KØDEX — Nueva colección"
+          onError={() => setBannerFailed(true)}
+          className="w-full h-auto block"
+        />
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button asChild size="lg" className="bg-primary hover:bg-red-700 text-lg px-8">
+              <Link href="/tienda">
+                VER COLECCIÓN
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="text-lg px-8 border-white hover:bg-white hover:text-black"
+            >
+              <Link href="/tienda">EXPLORAR</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-black">
-      {background ? (
+      {productPhoto ? (
         <>
           <img
-            src={background}
+            src={productPhoto}
             alt="KØDEX"
             className="absolute inset-0 w-full h-full object-cover"
           />
@@ -75,7 +108,12 @@ export function Hero() {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="text-lg px-8 border-white hover:bg-white hover:text-black">
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="text-lg px-8 border-white hover:bg-white hover:text-black"
+            >
               <Link href="/tienda">EXPLORAR</Link>
             </Button>
           </div>
