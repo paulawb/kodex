@@ -63,7 +63,7 @@ export function Lookbook() {
             <Link
               key={item.id}
               href="/tienda"
-              className="relative aspect-[4/5] overflow-hidden group block bg-accent"
+              className="relative aspect-square overflow-hidden group block bg-accent"
             >
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-10" />
               <img
