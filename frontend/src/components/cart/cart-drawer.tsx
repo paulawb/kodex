@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/store/cart-store";
+import { getProducts } from "@/lib/api";
 import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 
 export function CartDrawer() {
   const [open, setOpen] = useState(false);
-  const { items, removeItem, updateQuantity, getTotalPrice, clearCart } = useCartStore();
+  const { items, removeItem, updateQuantity, getTotalPrice, clearCart, syncStock } = useCartStore();
   const router = useRouter();
 
   useEffect(() => {
@@ -17,6 +18,14 @@ export function CartDrawer() {
     window.addEventListener("open-cart", handleOpenCart);
     return () => window.removeEventListener("open-cart", handleOpenCart);
   }, []);
+
+  // Al abrir el carrito, refrescamos el stock real de cada talla.
+  useEffect(() => {
+    if (!open) return;
+    getProducts()
+      .then((products) => syncStock(products))
+      .catch(() => {});
+  }, [open, syncStock]);
 
   const handleCheckout = () => {
     setOpen(false);
@@ -68,6 +77,13 @@ export function CartDrawer() {
                         <h4 className="font-semibold text-sm line-clamp-2">{item.name}</h4>
                         {item.color && <p className="text-xs text-muted-foreground">Color: {item.color}</p>}
                         <p className="text-xs text-muted-foreground">Talla: {item.size}</p>
+                        {typeof item.stock === "number" && (
+                          <p className="text-xs text-muted-foreground">
+                            {item.quantity >= item.stock
+                              ? `Máximo disponible: ${item.stock}`
+                              : `Disponibles: ${item.stock - item.quantity}`}
+                          </p>
+                        )}
                       </div>
                       <Button
                         variant="ghost"
@@ -94,6 +110,7 @@ export function CartDrawer() {
                           size="icon"
                           className="h-7 w-7"
                           onClick={() => updateQuantity(item.id, item.size, item.quantity + 1, item.color)}
+                          disabled={typeof item.stock === "number" && item.quantity >= item.stock}
                         >
                           <Plus className="h-3 w-3" />
                         </Button>

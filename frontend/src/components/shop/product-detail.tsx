@@ -15,6 +15,7 @@ export function ProductDetail({ slug }: { slug: string }) {
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const addItem = useCartStore((state) => state.addItem);
+  const cartItems = useCartStore((state) => state.items);
 
   useEffect(() => {
     getProductBySlug(slug)
@@ -34,6 +35,7 @@ export function ProductDetail({ slug }: { slug: string }) {
 
   useEffect(() => {
     setCurrentImageIndex(0);
+    setQuantity(1);
     if (selectedColor && selectedColor.variants && selectedColor.variants.length > 0) {
       setSelectedSize(selectedColor.variants[0].size);
     } else {
@@ -49,8 +51,32 @@ export function ProductDetail({ slug }: { slug: string }) {
     }
 
     const variant = selectedColor.variants.find((v) => v.size === selectedSize);
-    if (variant && variant.stock <= 0) {
+    if (!variant || variant.stock <= 0) {
       alert("Esta talla no está disponible");
+      return;
+    }
+
+    const inCart = cartItems
+      .filter(
+        (item) =>
+          item.id === product.id &&
+          item.size === selectedSize &&
+          item.color === selectedColor.name
+      )
+      .reduce((total, item) => total + item.quantity, 0);
+
+    const available = variant.stock - inCart;
+    if (available <= 0) {
+      alert(`Ya tienes todas las unidades disponibles en el carrito (${variant.stock}).`);
+      return;
+    }
+
+    if (quantity > available) {
+      alert(
+        `Solo quedan ${available} unidades disponibles de esta talla${
+          inCart > 0 ? ` (ya tienes ${inCart} en el carrito)` : ""
+        }.`
+      );
       return;
     }
 
@@ -63,6 +89,7 @@ export function ProductDetail({ slug }: { slug: string }) {
       size: selectedSize,
       color: selectedColor.name,
       quantity: quantity,
+      stock: variant.stock,
     });
 
     const event = new CustomEvent("open-cart");
@@ -89,6 +116,19 @@ export function ProductDetail({ slug }: { slug: string }) {
   const availableVariants = selectedColor?.variants || [];
   const currentVariant = availableVariants.find((v) => v.size === selectedSize);
   const isOutOfStock = currentVariant ? currentVariant.stock <= 0 : false;
+
+  const inCartForSelection = cartItems
+    .filter(
+      (item) =>
+        item.id === product.id &&
+        item.size === selectedSize &&
+        item.color === selectedColor?.name
+    )
+    .reduce((total, item) => total + item.quantity, 0);
+
+  const remainingStock = currentVariant
+    ? Math.max(0, currentVariant.stock - inCartForSelection)
+    : 0;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -162,7 +202,10 @@ export function ProductDetail({ slug }: { slug: string }) {
                 <Button
                   key={variant.id}
                   variant={selectedSize === variant.size ? "default" : "outline"}
-                  onClick={() => setSelectedSize(variant.size)}
+                  onClick={() => {
+                    setSelectedSize(variant.size);
+                    setQuantity(1);
+                  }}
                   disabled={variant.stock <= 0}
                   className={`${selectedSize === variant.size ? "bg-primary hover:bg-red-700" : ""} ${
                     variant.stock <= 0 ? "opacity-50 cursor-not-allowed" : ""
@@ -190,8 +233,8 @@ export function ProductDetail({ slug }: { slug: string }) {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => setQuantity(quantity + 1)}
-              disabled={currentVariant ? quantity >= currentVariant.stock : false}
+              onClick={() => setQuantity(Math.min(quantity + 1, Math.max(1, remainingStock)))}
+              disabled={remainingStock <= quantity}
             >
               +
             </Button>
@@ -202,14 +245,26 @@ export function ProductDetail({ slug }: { slug: string }) {
           onClick={handleAddToCart}
           size="lg"
           className="w-full bg-primary hover:bg-red-700 text-lg"
-          disabled={!selectedColor || availableVariants.length === 0 || isOutOfStock}
+          disabled={
+            !selectedColor || availableVariants.length === 0 || isOutOfStock || remainingStock <= 0
+          }
         >
           <ShoppingBag className="mr-2 h-5 w-5" />
-          {isOutOfStock || availableVariants.length === 0 ? "AGOTADO" : "AÑADIR AL CARRITO"}
+          {isOutOfStock || availableVariants.length === 0
+            ? "AGOTADO"
+            : remainingStock <= 0
+            ? "YA TIENES TODO EN EL CARRITO"
+            : "AÑADIR AL CARRITO"}
         </Button>
 
-        {currentVariant && currentVariant.stock > 0 && currentVariant.stock < 10 && (
-          <p className="text-sm text-primary">¡Solo quedan {currentVariant.stock} unidades en esta talla!</p>
+        {currentVariant && currentVariant.stock > 0 && (
+          <p className="text-sm text-primary">
+            {remainingStock <= 0
+              ? `Ya tienes las ${currentVariant.stock} unidades disponibles en el carrito.`
+              : currentVariant.stock < 10
+              ? `¡Solo quedan ${currentVariant.stock} unidades en esta talla!`
+              : `Disponibles: ${currentVariant.stock} unidades.`}
+          </p>
         )}
       </div>
     </div>
