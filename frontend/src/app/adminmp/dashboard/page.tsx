@@ -13,7 +13,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     const pass = localStorage.getItem("kodex_admin_pass");
     if (!pass) {
-      router.push("/admin/login");
+      router.push("/adminmp/login");
     } else {
       setIsAuth(true);
     }
@@ -30,7 +30,7 @@ export default function AdminDashboardPage() {
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <Button
-            onClick={() => router.push("/admin/dashboard/apariencia")}
+            onClick={() => router.push("/adminmp/dashboard/apariencia")}
             variant="outline"
             size="lg"
           >
@@ -38,7 +38,7 @@ export default function AdminDashboardPage() {
             APARIENCIA
           </Button>
           <Button
-            onClick={() => router.push("/admin/dashboard/producto/nuevo")}
+            onClick={() => router.push("/adminmp/dashboard/producto/nuevo")}
             className="bg-primary hover:bg-red-700"
             size="lg"
           >

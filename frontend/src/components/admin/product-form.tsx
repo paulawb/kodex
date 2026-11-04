@@ -72,7 +72,7 @@ export function ProductForm({ id }: ProductFormProps) {
       const loadProduct = async () => {
         const pass = localStorage.getItem("kodex_admin_pass");
         if (!pass) {
-          router.push("/admin/login");
+          router.push("/adminmp/login");
           return;
         }
         try {
@@ -220,7 +220,7 @@ export function ProductForm({ id }: ProductFormProps) {
     e.preventDefault();
     const pass = localStorage.getItem("kodex_admin_pass");
     if (!pass) {
-      router.push("/admin/login");
+      router.push("/adminmp/login");
       return;
     }
 
@@ -264,7 +264,7 @@ export function ProductForm({ id }: ProductFormProps) {
       } else {
         await adminCreateProduct(pass, data);
       }
-      router.push("/admin/dashboard");
+      router.push("/adminmp/dashboard");
     } catch (error: any) {
       console.error("Error al guardar producto:", error);
       alert(typeof error?.message === "string" ? error.message : "Error al guardar producto");
@@ -546,7 +546,7 @@ export function ProductForm({ id }: ProductFormProps) {
             <Button type="submit" className="bg-primary hover:bg-red-700" disabled={loading}>
               {loading ? "GUARDANDO..." : id ? "ACTUALIZAR PRODUCTO" : "CREAR PRODUCTO"}
             </Button>
-            <Button type="button" variant="outline" onClick={() => router.push("/admin/dashboard")}>
+            <Button type="button" variant="outline" onClick={() => router.push("/adminmp/dashboard")}>
               CANCELAR
             </Button>
           </div>

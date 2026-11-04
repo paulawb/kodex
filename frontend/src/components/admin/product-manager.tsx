@@ -23,7 +23,7 @@ export function ProductManager() {
       setProducts(data);
     } catch (error) {
       console.error(error);
-      router.push("/admin/login");
+      router.push("/adminmp/login");
     } finally {
       setLoading(false);
     }
@@ -113,7 +113,7 @@ export function ProductManager() {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => router.push(`/admin/dashboard/producto/${product.id}`)}
+                      onClick={() => router.push(`/adminmp/dashboard/producto/${product.id}`)}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>

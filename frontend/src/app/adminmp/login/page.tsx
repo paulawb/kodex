@@ -19,7 +19,7 @@ export default function AdminLoginPage() {
       return;
     }
     localStorage.setItem("kodex_admin_pass", password);
-    router.push("/admin/dashboard");
+    router.push("/adminmp/dashboard");
   };
 
   return (

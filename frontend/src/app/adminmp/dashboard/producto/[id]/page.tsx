@@ -14,7 +14,7 @@ export default function ProductFormPage() {
   useEffect(() => {
     const pass = localStorage.getItem("kodex_admin_pass");
     if (!pass) {
-      router.push("/admin/login");
+      router.push("/adminmp/login");
     } else {
       setIsAuth(true);
     }

@@ -80,7 +80,7 @@ export default function AppearancePage() {
   useEffect(() => {
     const pass = localStorage.getItem("kodex_admin_pass");
     if (!pass) {
-      router.push("/admin/login");
+      router.push("/adminmp/login");
       return;
     }
     setIsAuth(true);
@@ -112,7 +112,7 @@ export default function AppearancePage() {
   const handleSave = async () => {
     const pass = localStorage.getItem("kodex_admin_pass");
     if (!pass) {
-      router.push("/admin/login");
+      router.push("/adminmp/login");
       return;
     }
     setSaving(true);
@@ -137,7 +137,7 @@ export default function AppearancePage() {
   return (
     <div className="container mx-auto px-4 py-16 max-w-4xl">
       <div className="mb-10 space-y-2">
-        <Button variant="ghost" className="px-0" onClick={() => router.push("/admin/dashboard")}>
+        <Button variant="ghost" className="px-0" onClick={() => router.push("/adminmp/dashboard")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Volver al panel
         </Button>
