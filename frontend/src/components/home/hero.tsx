@@ -38,15 +38,12 @@ export function Hero() {
   if (banner) {
     return (
       <section className="w-full bg-black">
-        <div className="mx-auto w-full max-w-[1500px]">
-          <img
-            src={banner}
-            alt="KØDEX — Nueva colección"
-            onError={() => setBannerFailed(true)}
-            decoding="async"
-            className="block w-full h-auto max-h-[70vh] object-contain"
-          />
-        </div>
+        <img
+          src={banner}
+          alt="KØDEX — Nueva colección"
+          onError={() => setBannerFailed(true)}
+          className="block w-full h-auto"
+        />
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-primary hover:bg-red-700 text-lg px-8">
