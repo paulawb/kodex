@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ProductManager } from "@/components/admin/product-manager";
-import { Plus } from "lucide-react";
+import { Image, Plus } from "lucide-react";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -28,14 +28,24 @@ export default function AdminDashboardPage() {
           <h1 className="text-4xl md:text-5xl font-bold tracking-tighter">PANEL ADMIN</h1>
           <p className="text-lg text-muted-foreground">Gestión de productos KØDEX</p>
         </div>
-        <Button
-          onClick={() => router.push("/admin/dashboard/producto/nuevo")}
-          className="bg-primary hover:bg-red-700"
-          size="lg"
-        >
-          <Plus className="mr-2 h-5 w-5" />
-          NUEVO PRODUCTO
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button
+            onClick={() => router.push("/admin/dashboard/apariencia")}
+            variant="outline"
+            size="lg"
+          >
+            <Image className="mr-2 h-5 w-5" />
+            APARIENCIA
+          </Button>
+          <Button
+            onClick={() => router.push("/admin/dashboard/producto/nuevo")}
+            className="bg-primary hover:bg-red-700"
+            size="lg"
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            NUEVO PRODUCTO
+          </Button>
+        </div>
       </div>
       <ProductManager />
     </div>

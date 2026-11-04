@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getProducts } from "@/lib/api";
+import { getProducts, getSiteSettings } from "@/lib/api";
 import { lookbookItems } from "@/config/lookbook";
 import { Product } from "@/types/product";
 
@@ -24,22 +24,30 @@ function productPhotos(products: Product[]): string[] {
 
 export function Lookbook() {
   const [photos, setPhotos] = useState<string[]>([]);
+  const [adminImages, setAdminImages] = useState<(string | null)[]>([null, null]);
   const [failed, setFailed] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     getProducts()
       .then((products: Product[]) => setPhotos(productPhotos(products)))
       .catch(() => setPhotos([]));
+
+    getSiteSettings()
+      .then((settings) => setAdminImages([settings?.lookbook1 || null, settings?.lookbook2 || null]))
+      .catch(() => setAdminImages([null, null]));
   }, []);
 
   const items = lookbookItems.map((item, index) => {
     const configured =
       typeof item.image === "string" && item.image.startsWith("/") ? item.image : "";
+    const fromAdmin = adminImages[index];
     const fromStore = photos[index] || "";
 
-    // 1º foto configurada (si existe), 2º foto de un producto, 3º imagen de marca.
+    // 1º imagen subida en el admin, 2º archivo del proyecto, 3º foto de producto, 4º marca.
     const image =
-      configured && !failed[item.id]
+      fromAdmin && !failed[item.id]
+        ? fromAdmin
+        : configured && !failed[item.id]
         ? configured
         : fromStore || FALLBACK_IMAGE;
 

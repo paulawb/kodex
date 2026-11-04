@@ -36,6 +36,42 @@ export async function getProductBySlug(slug: string) {
   return res.json();
 }
 
+export interface SiteSettings {
+  banner: string | null;
+  lookbook1: string | null;
+  lookbook2: string | null;
+}
+
+export async function getSiteSettings(): Promise<SiteSettings> {
+  const res = await fetch(`${API_URL}/settings`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Error al obtener la apariencia");
+  return res.json();
+}
+
+export async function adminGetSiteSettings(password: string): Promise<SiteSettings> {
+  const res = await fetch(`${API_URL}/admin/settings`, {
+    headers: { "x-admin-password": password },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("No autorizado");
+  return res.json();
+}
+
+export async function adminUpdateSiteSettings(password: string, data: Partial<SiteSettings>) {
+  const res = await fetch(`${API_URL}/admin/settings`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-password": password,
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Error al guardar la apariencia"));
+  }
+  return res.json();
+}
+
 export async function adminGetProducts(password: string) {
   const res = await fetch(`${API_URL}/admin/products`, {
     headers: { "x-admin-password": password },

@@ -6,6 +6,7 @@ import { DeleteProductUseCase } from '@application/product/use-cases/delete-prod
 import { GetAllProductsUseCase } from '@application/product/use-cases/get-all-products.use-case';
 import { PrismaProductRepository } from '@infrastructure/product/repository/prisma-product.repository';
 import { PRODUCT_REPOSITORY } from '@domain/product/repository/product.repository.interface';
+import { SettingsService } from '@infrastructure/settings/settings.service';
 
 @Module({
   controllers: [AdminController],
@@ -14,6 +15,7 @@ import { PRODUCT_REPOSITORY } from '@domain/product/repository/product.repositor
     CreateProductUseCase,
     UpdateProductUseCase,
     DeleteProductUseCase,
+    SettingsService,
     {
       provide: PRODUCT_REPOSITORY,
       useClass: PrismaProductRepository,

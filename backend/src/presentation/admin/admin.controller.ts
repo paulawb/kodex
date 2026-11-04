@@ -4,6 +4,7 @@ import { CreateProductUseCase } from '@application/product/use-cases/create-prod
 import { UpdateProductUseCase } from '@application/product/use-cases/update-product.use-case';
 import { DeleteProductUseCase } from '@application/product/use-cases/delete-product.use-case';
 import { GetAllProductsUseCase } from '@application/product/use-cases/get-all-products.use-case';
+import { SettingsService } from '@infrastructure/settings/settings.service';
 
 @Controller('admin')
 @UseGuards(AdminGuard)
@@ -13,7 +14,18 @@ export class AdminController {
     private readonly createProductUseCase: CreateProductUseCase,
     private readonly updateProductUseCase: UpdateProductUseCase,
     private readonly deleteProductUseCase: DeleteProductUseCase,
+    private readonly settingsService: SettingsService,
   ) {}
+
+  @Get('settings')
+  getSettings() {
+    return this.settingsService.getPublic();
+  }
+
+  @Put('settings')
+  updateSettings(@Body() body: any) {
+    return this.settingsService.update(body);
+  }
 
   @Get('products')
   findAll() {

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { getProducts } from "@/lib/api";
+import { getProducts, getSiteSettings } from "@/lib/api";
 import { heroConfig } from "@/config/hero";
 import { Product } from "@/types/product";
 
@@ -24,8 +24,17 @@ function firstProductPhoto(products: Product[]): string {
 export function Hero() {
   const [bannerFailed, setBannerFailed] = useState(false);
   const [productPhoto, setProductPhoto] = useState("");
+  const [adminBanner, setAdminBanner] = useState("");
 
-  const banner = heroConfig.image && !bannerFailed ? heroConfig.image : "";
+  // 1º banner subido desde el admin, 2º archivo del proyecto, 3º foto de un producto.
+  const banner =
+    (adminBanner || (heroConfig.image && !bannerFailed ? heroConfig.image : "")) || "";
+
+  useEffect(() => {
+    getSiteSettings()
+      .then((settings) => setAdminBanner(settings?.banner || ""))
+      .catch(() => setAdminBanner(""));
+  }, []);
 
   useEffect(() => {
     if (banner) return;
@@ -41,7 +50,13 @@ export function Hero() {
         <img
           src={banner}
           alt="KØDEX — Nueva colección"
-          onError={() => setBannerFailed(true)}
+          onError={() => {
+            if (adminBanner) {
+              setAdminBanner("");
+            } else {
+              setBannerFailed(true);
+            }
+          }}
           className="block w-full h-auto"
         />
         <div className="container mx-auto px-4 py-8">

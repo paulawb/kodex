@@ -47,3 +47,11 @@ model ProductVariant {
   @@unique([colorId, size])
   @@map("product_variants")
 }
+
+model SiteSetting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
