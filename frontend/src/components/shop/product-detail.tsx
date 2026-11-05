@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { getProductBySlug } from "@/lib/api";
 import { Product, ProductColor } from "@/types/product";
 import { useCartStore } from "@/store/cart-store";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Truck, Ruler, X } from "lucide-react";
 
 export function ProductDetail({ slug }: { slug: string }) {
   const [product, setProduct] = useState<Product | null>(null);
@@ -14,6 +14,7 @@ export function ProductDetail({ slug }: { slug: string }) {
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
   const cartItems = useCartStore((state) => state.items);
 
@@ -241,6 +242,27 @@ export function ProductDetail({ slug }: { slug: string }) {
           </div>
         </div>
 
+        {product.freeShippingFusagasuga && (
+          <div className="flex items-center gap-3 rounded-md border border-green-500/40 bg-green-500/10 px-4 py-3">
+            <Truck className="h-6 w-6 flex-shrink-0 text-green-400" />
+            <p className="text-base font-extrabold uppercase tracking-wide text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.45)]">
+              Envío gratis en Fusagasugá
+            </p>
+          </div>
+        )}
+
+        {product.sizeGuide && (
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => setShowSizeGuide(true)}
+          >
+            <Ruler className="mr-2 h-4 w-4" />
+            VER GUÍA DE TALLAS
+          </Button>
+        )}
+
         <Button
           onClick={handleAddToCart}
           size="lg"
@@ -267,6 +289,36 @@ export function ProductDetail({ slug }: { slug: string }) {
           </p>
         )}
       </div>
+
+      {showSizeGuide && product.sizeGuide && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"
+          onClick={() => setShowSizeGuide(false)}
+        >
+          <div
+            className="relative max-h-[90vh] w-full max-w-2xl overflow-auto rounded-lg border bg-background p-3"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-2 z-10 bg-background/80"
+              onClick={() => setShowSizeGuide(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+            <p className="mb-2 text-center text-sm font-semibold uppercase tracking-wider">
+              Guía de tallas
+            </p>
+            <img
+              src={product.sizeGuide}
+              alt={`Guía de tallas de ${product.name}`}
+              className="h-auto w-full rounded"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

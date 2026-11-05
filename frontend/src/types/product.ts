@@ -21,6 +21,8 @@ export interface Product {
   originalPrice?: number | null;
   category: string;
   isFeatured: boolean;
+  sizeGuide?: string | null;
+  freeShippingFusagasuga?: boolean;
   colors: ProductColor[];
   createdAt: string;
   updatedAt: string;

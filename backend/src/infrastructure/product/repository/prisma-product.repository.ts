@@ -69,6 +69,8 @@ export class PrismaProductRepository implements IProductRepository {
             : Number(productData.originalPrice),
         category: productData.category,
         isFeatured: Boolean(productData.isFeatured),
+        sizeGuide: productData.sizeGuide || null,
+        freeShippingFusagasuga: Boolean(productData.freeShippingFusagasuga),
         colors: {
           create: this.normalizeColors(colors).map((color) => ({
             name: color.name,
@@ -104,6 +106,15 @@ export class PrismaProductRepository implements IProductRepository {
     if (productData.category !== undefined && productData.category !== null) updateData.category = productData.category;
     if (productData.isFeatured !== undefined && productData.isFeatured !== null) {
       updateData.isFeatured = Boolean(productData.isFeatured);
+    }
+    if (productData.sizeGuide !== undefined) {
+      updateData.sizeGuide = productData.sizeGuide || null;
+    }
+    if (
+      productData.freeShippingFusagasuga !== undefined &&
+      productData.freeShippingFusagasuga !== null
+    ) {
+      updateData.freeShippingFusagasuga = Boolean(productData.freeShippingFusagasuga);
     }
 
     if (productData.slug !== undefined && productData.slug !== null) {
@@ -253,6 +264,8 @@ export class PrismaProductRepository implements IProductRepository {
       p.createdAt,
       p.updatedAt,
       p.originalPrice ?? null,
+      p.sizeGuide ?? null,
+      Boolean(p.freeShippingFusagasuga),
     );
   }
 }

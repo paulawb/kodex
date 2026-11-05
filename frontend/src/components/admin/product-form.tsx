@@ -57,7 +57,10 @@ export function ProductForm({ id }: ProductFormProps) {
     originalPrice: "" as any,
     category: "",
     isFeatured: false,
+    freeShippingFusagasuga: false,
   });
+
+  const [sizeGuide, setSizeGuide] = useState("");
 
   const [colors, setColors] = useState<ColorForm[]>([
     {
@@ -96,7 +99,9 @@ export function ProductForm({ id }: ProductFormProps) {
                 originalPrice: product.originalPrice ?? "",
                 category: product.category || "",
                 isFeatured: product.isFeatured || false,
+                freeShippingFusagasuga: Boolean(product.freeShippingFusagasuga),
               });
+              setSizeGuide(product.sizeGuide || "");
               if (product.colors && product.colors.length > 0) {
                 setColors(
                   product.colors.map((color: any) => ({
@@ -248,6 +253,8 @@ export function ProductForm({ id }: ProductFormProps) {
         price: Number(formData.price),
         category: formData.category,
         isFeatured: formData.isFeatured,
+        freeShippingFusagasuga: formData.freeShippingFusagasuga,
+        sizeGuide: sizeGuide || null,
         originalPrice: formData.originalPrice === "" || formData.originalPrice === null || formData.originalPrice === undefined ? null : Number(formData.originalPrice),
         colors: colors.map((color) => ({
           name: color.name,
@@ -349,6 +356,67 @@ export function ProductForm({ id }: ProductFormProps) {
               <span className="text-lg font-bold text-primary">${Number(formData.price).toLocaleString("es-CO")}</span>
             </p>
           )}
+
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="freeShippingFusagasuga"
+              name="freeShippingFusagasuga"
+              checked={formData.freeShippingFusagasuga}
+              onChange={handleChange}
+              className="w-4 h-4"
+            />
+            <Label htmlFor="freeShippingFusagasuga">
+              Envío gratis en Fusagasugá (se muestra en la prenda)
+            </Label>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Guía de tallas (opcional)</Label>
+            <p className="text-sm text-muted-foreground">
+              Imagen que el cliente podrá ver en la prenda para saber qué talla elegir
+            </p>
+            {sizeGuide ? (
+              <div className="relative w-full max-w-sm overflow-hidden rounded-md border bg-accent">
+                <img src={sizeGuide} alt="Guía de tallas" className="w-full h-auto" />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  className="absolute top-2 right-2 h-7 w-7"
+                  onClick={() => setSizeGuide("")}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <label className="flex w-full max-w-sm cursor-pointer flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-8 text-sm hover:bg-muted/50">
+                <Upload className="h-5 w-5 text-muted-foreground" />
+                Subir guía de tallas
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type)) {
+                      alert("Solo se permiten imágenes JPG, PNG o WEBP");
+                      return;
+                    }
+                    if (file.size > 10 * 1024 * 1024) {
+                      alert("La imagen no debe superar 10 MB");
+                      return;
+                    }
+                    const reader = new FileReader();
+                    reader.onloadend = () => setSizeGuide(String(reader.result));
+                    reader.readAsDataURL(file);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            )}
+          </div>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">

@@ -29,5 +29,7 @@ export class Product {
     public readonly createdAt: Date,
     public readonly updatedAt: Date,
     public originalPrice?: number | null,
+    public sizeGuide?: string | null,
+    public freeShippingFusagasuga?: boolean,
   ) {}
 }
