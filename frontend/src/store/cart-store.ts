@@ -78,27 +78,47 @@ export const useCartStore = create<CartStore>()(
       syncStock: (products) => {
         if (!Array.isArray(products)) return;
 
-        const stockByKey = new Map<string, number>();
+        // Índice de la información actual de cada producto/color/talla.
+        const index = new Map<string, { product: any; color: any; variant: any }>();
         for (const product of products) {
           for (const color of product?.colors || []) {
             for (const variant of color?.variants || []) {
-              stockByKey.set(
-                `${product.id}|${color.name}|${variant.size}`,
-                Number(variant.stock) || 0
-              );
+              index.set(`${product.id}|${color.name}|${variant.size}`, {
+                product,
+                color,
+                variant,
+              });
             }
           }
         }
 
-        set({
-          items: get()
-            .items.map((item) => {
-              const stock = stockByKey.get(`${item.id}|${item.color}|${item.size}`);
-              if (stock === undefined) return item;
-              return { ...item, stock, quantity: Math.max(0, Math.min(item.quantity, stock)) };
-            })
-            .filter((item) => item.quantity > 0),
-        });
+        const nextItems: CartItem[] = [];
+
+        for (const item of get().items) {
+          const match = index.get(`${item.id}|${item.color}|${item.size}`);
+
+          // Si el producto, color o talla ya no existe, se quita del carrito.
+          if (!match) continue;
+
+          const stock = Number(match.variant.stock) || 0;
+          if (stock <= 0) continue;
+
+          const quantity = Math.min(item.quantity, stock);
+          if (quantity <= 0) continue;
+
+          nextItems.push({
+            ...item,
+            // Refrescamos TODO lo que pueda haber cambiado en el admin.
+            name: match.product.name || item.name,
+            slug: match.product.slug || item.slug,
+            price: Number(match.product.price) || item.price,
+            image: match.color.images?.[0] || item.image,
+            stock,
+            quantity,
+          });
+        }
+
+        set({ items: nextItems });
       },
       clearCart: () => set({ items: [] }),
       getTotalPrice: () => {

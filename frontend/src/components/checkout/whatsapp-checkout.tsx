@@ -8,10 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCartStore } from "@/store/cart-store";
+import { getProducts } from "@/lib/api";
 import { ArrowLeft, MessageCircle } from "lucide-react";
 
 export function WhatsAppCheckout() {
-  const { items, getTotalPrice, clearCart } = useCartStore();
+  const { items, getTotalPrice, clearCart, syncStock } = useCartStore();
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
@@ -19,6 +20,13 @@ export function WhatsAppCheckout() {
     address: "",
     note: "",
   });
+
+  // Refrescamos fotos, precios y stock antes de mostrar el resumen.
+  useEffect(() => {
+    getProducts()
+      .then((products) => syncStock(products))
+      .catch(() => {});
+  }, [syncStock]);
 
   useEffect(() => {
     if (items.length === 0) {
