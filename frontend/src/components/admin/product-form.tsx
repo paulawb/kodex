@@ -9,8 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { adminCreateProduct, adminUpdateProduct } from "@/lib/api";
 import { getAdminPass } from "@/lib/admin-auth";
+import { ImageCropper } from "@/components/admin/image-cropper";
 import Image from "next/image";
-import { Plus, Trash2, Upload, X } from "lucide-react";
+import { Crop, Plus, Trash2, Upload, X } from "lucide-react";
 
 interface ProductFormProps {
   id: string | null;
@@ -61,6 +62,12 @@ export function ProductForm({ id }: ProductFormProps) {
   });
 
   const [sizeGuide, setSizeGuide] = useState("");
+
+  const [cropTarget, setCropTarget] = useState<{
+    colorIndex: number;
+    imageIndex: number;
+    src: string;
+  } | null>(null);
 
   const [colors, setColors] = useState<ColorForm[]>([
     {
@@ -183,16 +190,24 @@ export function ProductForm({ id }: ProductFormProps) {
     const reader = new FileReader();
     reader.onloadend = () => {
       const result = reader.result as string;
-      setColors((prevColors) => {
-        const newColors = [...prevColors];
-        const newImages = [...newColors[colorIndex].images];
-        newImages[imageIndex] = result;
-        newColors[colorIndex].images = newImages;
-        return newColors;
-      });
+      // Abrimos el recortador antes de guardar la foto.
+      setCropTarget({ colorIndex, imageIndex, src: result });
     };
     reader.readAsDataURL(file);
     e.target.value = "";
+  };
+
+  const applyCrop = (dataUrl: string) => {
+    if (!cropTarget) return;
+    const { colorIndex, imageIndex } = cropTarget;
+    setColors((prevColors) => {
+      const newColors = [...prevColors];
+      const newImages = [...newColors[colorIndex].images];
+      newImages[imageIndex] = dataUrl;
+      newColors[colorIndex].images = newImages;
+      return newColors;
+    });
+    setCropTarget(null);
   };
 
   const addVariant = (colorIndex: number) => {
@@ -518,6 +533,22 @@ export function ProductForm({ id }: ProductFormProps) {
                               />
                               <Button
                                 type="button"
+                                variant="secondary"
+                                size="icon"
+                                className="absolute top-1 left-1 h-7 w-7"
+                                title="Recortar imagen"
+                                onClick={() =>
+                                  setCropTarget({
+                                    colorIndex,
+                                    imageIndex: imgIndex,
+                                    src: color.images[imgIndex],
+                                  })
+                                }
+                              >
+                                <Crop className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                type="button"
                                 variant="destructive"
                                 size="icon"
                                 className="absolute top-1 right-1 h-6 w-6"
@@ -621,6 +652,15 @@ export function ProductForm({ id }: ProductFormProps) {
           </div>
         </form>
       </CardContent>
+
+      {cropTarget && (
+        <ImageCropper
+          image={cropTarget.src}
+          aspect={3 / 4}
+          onCancel={() => setCropTarget(null)}
+          onSave={applyCrop}
+        />
+      )}
     </Card>
   );
 }
