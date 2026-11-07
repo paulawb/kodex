@@ -1,5 +1,34 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 60000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Validación ligera de la contraseña del admin. */
+export async function adminPing(password: string, timeoutMs = 90000): Promise<boolean> {
+  try {
+    const res = await fetchWithTimeout(
+      `${API_URL}/admin/ping`,
+      { headers: { "x-admin-password": password }, cache: "no-store" },
+      timeoutMs
+    );
+    if (res.status === 401) return false;
+    if (!res.ok) throw new Error("Error del servidor");
+    return true;
+  } catch (error: any) {
+    if (error?.name === "AbortError") {
+      throw new Error("El servidor tardó demasiado en responder. Intenta de nuevo.");
+    }
+    throw new Error("No se pudo conectar con el servidor. Intenta de nuevo.");
+  }
+}
+
 async function errorMessage(res: Response, fallback: string) {
   try {
     const text = await res.text();

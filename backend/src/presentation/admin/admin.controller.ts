@@ -17,6 +17,11 @@ export class AdminController {
     private readonly settingsService: SettingsService,
   ) {}
 
+  @Get('ping')
+  ping() {
+    return { ok: true };
+  }
+
   @Get('settings')
   getSettings() {
     return this.settingsService.getPublic();
