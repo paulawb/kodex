@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { getProducts } from "@/lib/api";
+import { isProductSoldOut } from "@/lib/product-utils";
 import { Product } from "@/types/product";
 
 export function ProductGrid() {
@@ -45,12 +46,19 @@ export function ProductGrid() {
       {products.map((product) => (
         <Link key={product.id} href={`/producto/${product.slug}`}>
           <Card className="group overflow-hidden border-border hover:border-primary transition-all duration-300 h-full">
-            <div className="aspect-square overflow-hidden bg-accent">
+            <div className="relative aspect-square overflow-hidden bg-accent">
               <img
                 src={getMainImage(product)}
                 alt={product.name}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
               />
+              {isProductSoldOut(product) && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-red-600/35 backdrop-blur-[1px]">
+                  <span className="-rotate-12 border-2 border-red-400/70 bg-black/30 px-4 py-2 text-2xl font-black uppercase tracking-widest text-red-300 shadow-lg sm:text-3xl">
+                    Agotado
+                  </span>
+                </div>
+              )}
             </div>
             <CardContent className="p-4 space-y-2">
               <h3 className="font-semibold group-hover:text-primary transition-colors line-clamp-2">

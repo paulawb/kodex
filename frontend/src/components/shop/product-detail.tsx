@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { getProductBySlug } from "@/lib/api";
 import { Product, ProductColor } from "@/types/product";
 import { useCartStore } from "@/store/cart-store";
+import { isProductSoldOut } from "@/lib/product-utils";
 import { ShoppingBag, Truck, Ruler, X } from "lucide-react";
 
 export function ProductDetail({ slug }: { slug: string }) {
@@ -134,12 +135,19 @@ export function ProductDetail({ slug }: { slug: string }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
       <div className="space-y-4">
-        <div className="aspect-square overflow-hidden bg-accent">
+        <div className="relative aspect-square overflow-hidden bg-accent">
           <img
             src={images[currentImageIndex] || "/placeholder.svg"}
             alt={product.name}
             className="w-full h-full object-cover"
           />
+          {isProductSoldOut(product) && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-red-600/35 backdrop-blur-[1px]">
+              <span className="-rotate-12 border-2 border-red-400/70 bg-black/30 px-6 py-3 text-3xl font-black uppercase tracking-widest text-red-300 shadow-lg sm:text-4xl">
+                Agotado
+              </span>
+            </div>
+          )}
         </div>
         {images.length > 1 && (
           <div className="grid grid-cols-4 gap-4">

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getFeaturedProducts } from "@/lib/api";
+import { isProductSoldOut } from "@/lib/product-utils";
 import { Product } from "@/types/product";
 
 export function FeaturedCollection() {
@@ -54,12 +55,19 @@ export function FeaturedCollection() {
             return (
               <Link key={product.id} href={`/producto/${product.slug}`}>
                 <Card className="group overflow-hidden border-border hover:border-primary transition-all duration-300">
-                  <div className="aspect-square overflow-hidden bg-accent">
+                  <div className="relative aspect-square overflow-hidden bg-accent">
                     <img
                       src={mainImage}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
+                    {isProductSoldOut(product) && (
+                      <div className="absolute inset-0 z-10 flex items-center justify-center bg-red-600/35 backdrop-blur-[1px]">
+                        <span className="-rotate-12 border-2 border-red-400/70 bg-black/30 px-4 py-2 text-2xl font-black uppercase tracking-widest text-red-300 shadow-lg sm:text-3xl">
+                          Agotado
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <CardContent className="p-6">
                     <h3 className="text-lg font-semibold mb-2 group-hover:text-primary transition-colors">
