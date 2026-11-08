@@ -110,6 +110,18 @@ export async function adminGetProducts(password: string) {
   return res.json();
 }
 
+export async function adminGetProduct(password: string, id: string) {
+  const res = await fetchWithTimeout(
+    `${API_URL}/admin/products/${id}`,
+    { headers: { "x-admin-password": password }, cache: "no-store" },
+    60000
+  );
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Error al obtener el producto"));
+  }
+  return res.json();
+}
+
 export async function adminCreateProduct(password: string, data: any) {
   const res = await fetch(`${API_URL}/admin/products`, {
     method: "POST",

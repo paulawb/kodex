@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { adminCreateProduct, adminUpdateProduct } from "@/lib/api";
+import { adminCreateProduct, adminGetProduct, adminUpdateProduct } from "@/lib/api";
 import { getAdminPass } from "@/lib/admin-auth";
+import { getCachedProduct } from "@/lib/admin-products-cache";
 import { ImageCropper } from "@/components/admin/image-cropper";
 import Image from "next/image";
 import { Crop, Plus, Trash2, Upload, X } from "lucide-react";
@@ -51,6 +52,7 @@ export function ProductForm({ id }: ProductFormProps) {
   // v2 - colores por producto con tallas por color v3 - solo delantero/trasero
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [loadingProduct, setLoadingProduct] = useState(Boolean(id));
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -78,59 +80,58 @@ export function ProductForm({ id }: ProductFormProps) {
     },
   ]);
 
-  useEffect(() => {
-    if (id) {
-      const loadProduct = async () => {
-        const pass = getAdminPass();
-        if (!pass) {
-          router.push("/adminmp/login");
-          return;
-        }
-        try {
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/admin/products`,
-            {
-              headers: {
-                "x-admin-password": pass,
-              },
-            }
-          );
-          if (res.ok) {
-            const products = await res.json();
-            const product = products.find((p: any) => p.id === id);
-            if (product) {
-              setFormData({
-                name: product.name || "",
-                description: product.description || "",
-                price: product.price || 0,
-                originalPrice: product.originalPrice ?? "",
-                category: product.category || "",
-                isFeatured: product.isFeatured || false,
-                freeShippingFusagasuga: Boolean(product.freeShippingFusagasuga),
-              });
-              setSizeGuide(product.sizeGuide || "");
-              if (product.colors && product.colors.length > 0) {
-                setColors(
-                  product.colors.map((color: any) => ({
-                    id: color.id,
-                    name: color.name || "",
-                    hex: color.hex || "#000000",
-                    images: [color.images?.[0] || "", color.images?.[1] || ""],
-                    variants: (color.variants || []).map((v: any) => ({
-                      size: v.size,
-                      stock: v.stock || 0,
-                    })),
-                  }))
-                );
-              }
-            }
-          }
-        } catch (error) {
-          console.error(error);
-        }
-      };
-      loadProduct();
+  const applyProduct = (product: any) => {
+    if (!product) return;
+    setFormData({
+      name: product.name || "",
+      description: product.description || "",
+      price: product.price || 0,
+      originalPrice: product.originalPrice ?? "",
+      category: product.category || "",
+      isFeatured: product.isFeatured || false,
+      freeShippingFusagasuga: Boolean(product.freeShippingFusagasuga),
+    });
+    setSizeGuide(product.sizeGuide || "");
+    if (product.colors && product.colors.length > 0) {
+      setColors(
+        product.colors.map((color: any) => ({
+          id: color.id,
+          name: color.name || "",
+          hex: color.hex || "#000000",
+          images: [color.images?.[0] || "", color.images?.[1] || ""],
+          variants: (color.variants || []).map((v: any) => ({
+            size: v.size,
+            stock: v.stock || 0,
+          })),
+        }))
+      );
     }
+  };
+
+  useEffect(() => {
+    if (!id) {
+      setLoadingProduct(false);
+      return;
+    }
+
+    const pass = getAdminPass();
+    if (!pass) {
+      router.push("/adminmp/login");
+      return;
+    }
+
+    // Si venimos del listado, ya tenemos el producto en memoria: se abre al instante.
+    const cached = getCachedProduct(id);
+    if (cached) {
+      applyProduct(cached);
+      setLoadingProduct(false);
+      return;
+    }
+
+    adminGetProduct(pass, id)
+      .then((product) => applyProduct(product))
+      .catch((error) => console.error(error))
+      .finally(() => setLoadingProduct(false));
   }, [id, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -295,6 +296,19 @@ export function ProductForm({ id }: ProductFormProps) {
       setLoading(false);
     }
   };
+
+  if (loadingProduct) {
+    return (
+      <Card>
+        <CardContent className="py-20 text-center space-y-2">
+          <p className="text-muted-foreground">Cargando producto...</p>
+          <p className="text-xs text-muted-foreground">
+            Si tarda mucho, vuelve al panel e inténtalo de nuevo.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

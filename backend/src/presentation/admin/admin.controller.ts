@@ -4,6 +4,7 @@ import { CreateProductUseCase } from '@application/product/use-cases/create-prod
 import { UpdateProductUseCase } from '@application/product/use-cases/update-product.use-case';
 import { DeleteProductUseCase } from '@application/product/use-cases/delete-product.use-case';
 import { GetAllProductsUseCase } from '@application/product/use-cases/get-all-products.use-case';
+import { GetProductByIdUseCase } from '@application/product/use-cases/get-product-by-id.use-case';
 import { SettingsService } from '@infrastructure/settings/settings.service';
 
 @Controller('admin')
@@ -11,6 +12,7 @@ import { SettingsService } from '@infrastructure/settings/settings.service';
 export class AdminController {
   constructor(
     private readonly getAllProductsUseCase: GetAllProductsUseCase,
+    private readonly getProductByIdUseCase: GetProductByIdUseCase,
     private readonly createProductUseCase: CreateProductUseCase,
     private readonly updateProductUseCase: UpdateProductUseCase,
     private readonly deleteProductUseCase: DeleteProductUseCase,
@@ -35,6 +37,11 @@ export class AdminController {
   @Get('products')
   findAll() {
     return this.getAllProductsUseCase.execute();
+  }
+
+  @Get('products/:id')
+  findOne(@Param('id') id: string) {
+    return this.getProductByIdUseCase.execute(id);
   }
 
   @Post('products')

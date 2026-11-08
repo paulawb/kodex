@@ -4,6 +4,7 @@ import { CreateProductUseCase } from '@application/product/use-cases/create-prod
 import { UpdateProductUseCase } from '@application/product/use-cases/update-product.use-case';
 import { DeleteProductUseCase } from '@application/product/use-cases/delete-product.use-case';
 import { GetAllProductsUseCase } from '@application/product/use-cases/get-all-products.use-case';
+import { GetProductByIdUseCase } from '@application/product/use-cases/get-product-by-id.use-case';
 import { PrismaProductRepository } from '@infrastructure/product/repository/prisma-product.repository';
 import { PRODUCT_REPOSITORY } from '@domain/product/repository/product.repository.interface';
 import { SettingsService } from '@infrastructure/settings/settings.service';
@@ -12,6 +13,7 @@ import { SettingsService } from '@infrastructure/settings/settings.service';
   controllers: [AdminController],
   providers: [
     GetAllProductsUseCase,
+    GetProductByIdUseCase,
     CreateProductUseCase,
     UpdateProductUseCase,
     DeleteProductUseCase,
