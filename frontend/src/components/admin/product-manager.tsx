@@ -8,7 +8,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { adminGetProducts, adminDeleteProduct } from "@/lib/api";
 import { getAdminPass } from "@/lib/admin-auth";
-import { setCachedProducts } from "@/lib/admin-products-cache";
 import { Product } from "@/types/product";
 import { Edit, Trash2 } from "lucide-react";
 
@@ -23,7 +22,6 @@ export function ProductManager() {
     try {
       const data = await adminGetProducts(pass);
       setProducts(data);
-      setCachedProducts(data);
     } catch (error) {
       console.error(error);
       router.push("/adminmp/login");

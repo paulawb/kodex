@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { adminCreateProduct, adminGetProduct, adminUpdateProduct } from "@/lib/api";
 import { getAdminPass } from "@/lib/admin-auth";
-import { getCachedProduct } from "@/lib/admin-products-cache";
+import { getCachedProduct, updateCachedProduct } from "@/lib/admin-products-cache";
 import { ImageCropper } from "@/components/admin/image-cropper";
 import Image from "next/image";
 import { Crop, Plus, Trash2, Upload, X } from "lucide-react";
@@ -129,7 +129,10 @@ export function ProductForm({ id }: ProductFormProps) {
     }
 
     adminGetProduct(pass, id)
-      .then((product) => applyProduct(product))
+      .then((product) => {
+        applyProduct(product);
+        updateCachedProduct(product);
+      })
       .catch((error) => console.error(error))
       .finally(() => setLoadingProduct(false));
   }, [id, router]);
