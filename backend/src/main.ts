@@ -3,6 +3,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { ValidationPipe, ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
+import * as compression from 'compression';
 
 @Catch()
 class AllExceptionsFilter implements ExceptionFilter {
@@ -42,6 +43,9 @@ class AllExceptionsFilter implements ExceptionFilter {
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
+
+  // Comprime las respuestas (las imágenes en base64 pesan mucho).
+  app.use(compression());
 
   // Body parser propio con límite alto (las imágenes van en base64).
   app.useBodyParser('json', { limit: '50mb' });

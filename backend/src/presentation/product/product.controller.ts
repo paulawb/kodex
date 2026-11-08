@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Header } from '@nestjs/common';
 import { GetAllProductsUseCase } from '@application/product/use-cases/get-all-products.use-case';
 import { GetFeaturedProductsUseCase } from '@application/product/use-cases/get-featured-products.use-case';
 import { GetProductBySlugUseCase } from '@application/product/use-cases/get-product-by-slug.use-case';
@@ -12,6 +12,7 @@ export class ProductController {
   ) {}
 
   @Get()
+  @Header('Cache-Control', 'public, max-age=30, stale-while-revalidate=60')
   findAll() {
     return this.getAllProductsUseCase.execute();
   }
