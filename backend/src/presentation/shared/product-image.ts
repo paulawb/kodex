@@ -13,6 +13,7 @@ export function withImageUrls(product: any, baseUrl: string) {
   const slug = product?.slug;
   return {
     ...product,
+    sizeGuide: product?.sizeGuide ? `${baseUrl}/products/${slug}/size-guide` : null,
     colors: (product?.colors || []).map((color: any) => ({
       ...color,
       images: (color?.images || []).map(

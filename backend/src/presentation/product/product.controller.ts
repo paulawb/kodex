@@ -44,6 +44,22 @@ export class ProductController {
     return withImageUrls(product, baseUrlFrom(req));
   }
 
+  /** Guía de tallas como imagen cacheada. */
+  @Get(':slug/size-guide')
+  async sizeGuide(@Param('slug') slug: string, @Res() res: Response) {
+    const product: any = await this.getProductBySlugUseCase.execute(slug);
+    const dataUrl = product?.sizeGuide;
+    if (typeof dataUrl !== 'string') throw new NotFoundException('Guía de tallas no encontrada');
+
+    const match = /^data:([^;]+);base64,(.*)$/s.exec(dataUrl);
+    if (!match) throw new NotFoundException('Guía de tallas no encontrada');
+
+    const [, mimeType, base64] = match;
+    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    res.send(Buffer.from(base64, 'base64'));
+  }
+
   /** Sirve la foto de un producto con caché larga (la usan <img> de la tienda). */
   @Get(':slug/image/:index')
   async image(
