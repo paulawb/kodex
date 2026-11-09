@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCartStore } from "@/store/cart-store";
 import { getProducts } from "@/lib/api";
-import { ArrowLeft, MessageCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, MessageCircle } from "lucide-react";
 
 export function WhatsAppCheckout() {
   const { items, getTotalPrice, clearCart, syncStock } = useCartStore();
@@ -20,6 +20,10 @@ export function WhatsAppCheckout() {
     address: "",
     note: "",
   });
+
+  // Se llena cuando ya se generó el pedido y se abrió WhatsApp.
+  const [whatsappUrl, setWhatsappUrl] = useState("");
+  const [popupBlocked, setPopupBlocked] = useState(false);
 
   // Refrescamos fotos, precios y stock antes de mostrar el resumen.
   useEffect(() => {
@@ -82,15 +86,63 @@ export function WhatsAppCheckout() {
     message += `\nEnviado desde kodex.com`;
     
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-    
+    const url = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+
+    // Abrimos WhatsApp, pero NO vaciamos el carrito todavía.
+    const opened = window.open(url, "_blank");
+    setWhatsappUrl(url);
+    setPopupBlocked(!opened);
+  };
+
+  const handleConfirmSent = () => {
     clearCart();
-    window.open(whatsappUrl, "_blank");
     router.push("/tienda");
   };
 
   if (items.length === 0) {
     return null;
+  }
+
+  if (whatsappUrl) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="space-y-5 py-8 text-center">
+            <CheckCircle2 className="mx-auto h-14 w-14 text-green-500" />
+            <div className="space-y-2">
+              <p className="text-xl font-bold">Pedido listo para enviar</p>
+              <p className="text-sm text-muted-foreground">
+                {popupBlocked
+                  ? "Tu navegador bloqueó la ventana de WhatsApp. Usa el botón de abajo para abrirlo."
+                  : "Abrimos WhatsApp con tu pedido. Revisa el mensaje y envíalo."}
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Button asChild className="w-full bg-green-600 hover:bg-green-700" size="lg">
+                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="mr-2 h-5 w-5" />
+                  ABRIR WHATSAPP
+                </a>
+              </Button>
+
+              <Button onClick={handleConfirmSent} className="w-full" size="lg">
+                YA ENVIÉ MI PEDIDO
+              </Button>
+
+              <Button variant="outline" className="w-full" onClick={() => setWhatsappUrl("")}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                VOLVER AL CARRITO (no se ha vaciado)
+              </Button>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Tu carrito sigue guardado hasta que confirmes que enviaste el mensaje.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
