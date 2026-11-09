@@ -19,12 +19,21 @@ export function CartDrawer() {
     return () => window.removeEventListener("open-cart", handleOpenCart);
   }, []);
 
-  // Al abrir el carrito, refrescamos el stock real de cada talla.
+  // Refrescamos fotos, precios y stock: al cargar, al abrir el carrito
+  // y cuando el usuario vuelve a la pestaña (por si editó algo en el admin).
   useEffect(() => {
-    if (!open) return;
-    getProducts()
-      .then((products) => syncStock(products))
-      .catch(() => {});
+    const refresh = () => {
+      getProducts({ fresh: true })
+        .then((products) => syncStock(products))
+        .catch(() => {});
+    };
+
+    refresh();
+    if (open) refresh();
+
+    const onFocus = () => refresh();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   }, [open, syncStock]);
 
   const handleCheckout = () => {

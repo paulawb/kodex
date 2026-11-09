@@ -27,7 +27,7 @@ export function WhatsAppCheckout() {
 
   // Refrescamos fotos, precios y stock antes de mostrar el resumen.
   useEffect(() => {
-    getProducts()
+    getProducts({ fresh: true })
       .then((products) => syncStock(products))
       .catch(() => {});
   }, [syncStock]);

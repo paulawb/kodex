@@ -11,13 +11,20 @@ export function baseUrlFrom(req: Request): string {
 /** Reemplaza las imágenes base64 por URLs con caché, para que el JSON sea liviano. */
 export function withImageUrls(product: any, baseUrl: string) {
   const slug = product?.slug;
+
+  // Versión del caché: cambia cada vez que se edita el producto,
+  // así el navegador descarga la foto nueva en lugar de la vieja.
+  const updated = product?.updatedAt ? new Date(product.updatedAt).getTime() : 0;
+  const version = Number.isFinite(updated) && updated > 0 ? updated : Date.now();
+  const v = `?v=${version}`;
+
   return {
     ...product,
-    sizeGuide: product?.sizeGuide ? `${baseUrl}/products/${slug}/size-guide` : null,
+    sizeGuide: product?.sizeGuide ? `${baseUrl}/products/${slug}/size-guide${v}` : null,
     colors: (product?.colors || []).map((color: any) => ({
       ...color,
       images: (color?.images || []).map(
-        (_image: string, index: number) => `${baseUrl}/products/${slug}/image/${index}`
+        (_image: string, index: number) => `${baseUrl}/products/${slug}/image/${index}${v}`
       ),
     })),
   };

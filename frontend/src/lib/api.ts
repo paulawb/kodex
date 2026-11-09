@@ -47,9 +47,10 @@ async function errorMessage(res: Response, fallback: string) {
   }
 }
 
-export async function getProducts() {
-  // Cache corto en el navegador: evita volver a descargar todo en cada visita.
-  const res = await fetch(`${API_URL}/products`);
+export async function getProducts(options: { fresh?: boolean } = {}) {
+  // Cache corto en el navegador para la tienda; "fresh" fuerza datos nuevos
+  // (lo usa el carrito para reflejar cambios de fotos y stock al instante).
+  const res = await fetch(`${API_URL}/products`, options.fresh ? { cache: "no-store" } : undefined);
   if (!res.ok) throw new Error("Error al obtener productos");
   return res.json();
 }
