@@ -440,8 +440,28 @@ export function ProductForm({ id }: ProductFormProps) {
                       alert("La imagen no debe superar 10 MB");
                       return;
                     }
+                    // Comprimimos la guía para que no pese (y no consuma datos del servidor).
                     const reader = new FileReader();
-                    reader.onloadend = () => setSizeGuide(String(reader.result));
+                    reader.onloadend = () => {
+                      const img = new window.Image();
+                      img.onload = () => {
+                        const maxWidth = 1000;
+                        const scale = Math.min(1, maxWidth / img.width);
+                        const canvas = document.createElement("canvas");
+                        canvas.width = Math.round(img.width * scale);
+                        canvas.height = Math.round(img.height * scale);
+                        const ctx = canvas.getContext("2d");
+                        if (!ctx) {
+                          setSizeGuide(String(reader.result));
+                          return;
+                        }
+                        ctx.imageSmoothingQuality = "high";
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        setSizeGuide(canvas.toDataURL("image/jpeg", 0.8));
+                      };
+                      img.onerror = () => setSizeGuide(String(reader.result));
+                      img.src = String(reader.result);
+                    };
                     reader.readAsDataURL(file);
                     e.target.value = "";
                   }}

@@ -22,7 +22,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-async function cropImage(src: string, area: Area, maxWidth = 1200): Promise<string> {
+async function cropImage(src: string, area: Area, maxWidth = 800): Promise<string> {
   const image = await loadImage(src);
   const scale = Math.min(1, maxWidth / area.width);
 
@@ -46,7 +46,8 @@ async function cropImage(src: string, area: Area, maxWidth = 1200): Promise<stri
     canvas.height
   );
 
-  return canvas.toDataURL("image/jpeg", 0.92);
+  // Calidad moderada: la foto se ve bien y pesa ~5 veces menos.
+  return canvas.toDataURL("image/jpeg", 0.78);
 }
 
 export function ImageCropper({
