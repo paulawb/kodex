@@ -49,6 +49,11 @@ async function uploadImage(dataUrl: string): Promise<string> {
       const json = await res.json();
       if (json?.error) message = json.error;
     } catch {}
+
+    // Si Vercel Blob no está configurado, guardamos la foto comprimida
+    // directamente en la base de datos (modo de respaldo).
+    if (message.includes("BLOB_READ_WRITE_TOKEN")) return dataUrl;
+
     throw new Error(message);
   }
 
