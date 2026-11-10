@@ -33,6 +33,29 @@ interface ColorForm {
 
 const AVAILABLE_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "28", "30", "32", "34", "36", "38"];
 
+/** Sube la imagen a Vercel Blob y devuelve la URL pública. */
+async function uploadImage(dataUrl: string): Promise<string> {
+  // Si ya es una URL (foto existente), no hay nada que subir.
+  if (/^https?:\/\//i.test(dataUrl)) return dataUrl;
+
+  const blob = await (await fetch(dataUrl)).blob();
+  const form = new FormData();
+  form.append("file", blob, "foto.jpg");
+
+  const res = await fetch("/api/upload", { method: "POST", body: form });
+  if (!res.ok) {
+    let message = "No se pudo subir la imagen";
+    try {
+      const json = await res.json();
+      if (json?.error) message = json.error;
+    } catch {}
+    throw new Error(message);
+  }
+
+  const json = await res.json();
+  return json.url as string;
+}
+
 const COLOR_PALETTE = [
   "#000000", "#FFFFFF", "#FF0000", "#DC2626", "#B91C1C", "#991B1B",
   "#F59E0B", "#D97706", "#B45309", "#92400E", "#78350F",
@@ -52,6 +75,7 @@ export function ProductForm({ id }: ProductFormProps) {
   // v2 - colores por producto con tallas por color v3 - solo delantero/trasero
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [loadingProduct, setLoadingProduct] = useState(Boolean(id));
   const [formData, setFormData] = useState({
     name: "",
@@ -201,17 +225,26 @@ export function ProductForm({ id }: ProductFormProps) {
     e.target.value = "";
   };
 
-  const applyCrop = (dataUrl: string) => {
+  const applyCrop = async (dataUrl: string) => {
     if (!cropTarget) return;
     const { colorIndex, imageIndex } = cropTarget;
-    setColors((prevColors) => {
-      const newColors = [...prevColors];
-      const newImages = [...newColors[colorIndex].images];
-      newImages[imageIndex] = dataUrl;
-      newColors[colorIndex].images = newImages;
-      return newColors;
-    });
-    setCropTarget(null);
+
+    setUploading(true);
+    try {
+      const url = await uploadImage(dataUrl);
+      setColors((prevColors) => {
+        const newColors = [...prevColors];
+        const newImages = [...newColors[colorIndex].images];
+        newImages[imageIndex] = url;
+        newColors[colorIndex].images = newImages;
+        return newColors;
+      });
+      setCropTarget(null);
+    } catch (error: any) {
+      alert(error?.message || "No se pudo subir la imagen");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const addVariant = (colorIndex: number) => {
@@ -440,27 +473,41 @@ export function ProductForm({ id }: ProductFormProps) {
                       alert("La imagen no debe superar 10 MB");
                       return;
                     }
-                    // Comprimimos la guía para que no pese (y no consuma datos del servidor).
+                    // Comprimimos la guía y la subimos a Vercel Blob (no a la base de datos).
                     const reader = new FileReader();
-                    reader.onloadend = () => {
-                      const img = new window.Image();
-                      img.onload = () => {
+                    reader.onloadend = async () => {
+                      const original = String(reader.result);
+                      let toUpload = original;
+
+                      try {
+                        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+                          const image = new window.Image();
+                          image.onload = () => resolve(image);
+                          image.onerror = reject;
+                          image.src = original;
+                        });
+
                         const maxWidth = 1000;
                         const scale = Math.min(1, maxWidth / img.width);
                         const canvas = document.createElement("canvas");
                         canvas.width = Math.round(img.width * scale);
                         canvas.height = Math.round(img.height * scale);
                         const ctx = canvas.getContext("2d");
-                        if (!ctx) {
-                          setSizeGuide(String(reader.result));
-                          return;
+                        if (ctx) {
+                          ctx.imageSmoothingQuality = "high";
+                          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                          toUpload = canvas.toDataURL("image/jpeg", 0.8);
                         }
-                        ctx.imageSmoothingQuality = "high";
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        setSizeGuide(canvas.toDataURL("image/jpeg", 0.8));
-                      };
-                      img.onerror = () => setSizeGuide(String(reader.result));
-                      img.src = String(reader.result);
+                      } catch {}
+
+                      setUploading(true);
+                      try {
+                        setSizeGuide(await uploadImage(toUpload));
+                      } catch (error: any) {
+                        alert(error?.message || "No se pudo subir la guía de tallas");
+                      } finally {
+                        setUploading(false);
+                      }
                     };
                     reader.readAsDataURL(file);
                     e.target.value = "";
@@ -679,9 +726,19 @@ export function ProductForm({ id }: ProductFormProps) {
             ))}
           </div>
 
-          <div className="flex gap-4">
-            <Button type="submit" className="bg-primary hover:bg-red-700" disabled={loading}>
-              {loading ? "GUARDANDO..." : id ? "ACTUALIZAR PRODUCTO" : "CREAR PRODUCTO"}
+          <div className="flex flex-wrap items-center gap-4">
+            <Button
+              type="submit"
+              className="bg-primary hover:bg-red-700"
+              disabled={loading || uploading}
+            >
+              {uploading
+                ? "SUBIENDO IMAGEN..."
+                : loading
+                ? "GUARDANDO..."
+                : id
+                ? "ACTUALIZAR PRODUCTO"
+                : "CREAR PRODUCTO"}
             </Button>
             <Button type="button" variant="outline" onClick={() => router.push("/adminmp/dashboard")}>
               CANCELAR

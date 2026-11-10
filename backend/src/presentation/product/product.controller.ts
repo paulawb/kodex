@@ -56,10 +56,18 @@ export class ProductController {
   async sizeGuide(@Param('slug') slug: string, @Res() res: Response) {
     const image = await this.productRepository.findSizeGuide(slug);
     if (!image) throw new NotFoundException('Guía de tallas no encontrada');
+    return this.sendImage(res, image);
+  }
+
+  private sendImage(res: Response, image: any) {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+
+    if (image.redirectUrl) {
+      return res.redirect(302, image.redirectUrl);
+    }
 
     res.setHeader('Content-Type', image.mimeType);
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    res.send(image.data);
+    return res.send(image.data);
   }
 
   /** Sirve la foto de un producto con caché larga (la usan <img> de la tienda). */
@@ -71,9 +79,6 @@ export class ProductController {
   ) {
     const image = await this.productRepository.findImage(slug, Number(index));
     if (!image) throw new NotFoundException('Imagen no encontrada');
-
-    res.setHeader('Content-Type', image.mimeType);
-    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    res.send(image.data);
+    return this.sendImage(res, image);
   }
 }

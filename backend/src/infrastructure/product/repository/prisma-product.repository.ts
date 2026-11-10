@@ -4,6 +4,8 @@ import { PrismaService } from '@infrastructure/prisma/prisma.service';
 import { IProductRepository } from '@domain/product/repository/product.repository.interface';
 import { Product, ProductColor, ProductVariant } from '@domain/product/entity/product.entity';
 
+type ImageResult = { mimeType: string; data: Buffer } | { redirectUrl: string };
+
 @Injectable()
 export class PrismaProductRepository implements IProductRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -120,7 +122,7 @@ export class PrismaProductRepository implements IProductRepository {
   }
 
   /** Trae solo la imagen pedida (no todo el producto). */
-  async findImage(slug: string, index: number): Promise<{ mimeType: string; data: Buffer } | null> {
+  async findImage(slug: string, index: number): Promise<ImageResult | null> {
     const position = Math.max(0, Math.trunc(index)) + 1;
     const rows: any[] = await this.prisma.$queryRaw`
       SELECT c.images[${position}] AS image
@@ -131,20 +133,26 @@ export class PrismaProductRepository implements IProductRepository {
       LIMIT 1
     `;
 
-    return this.parseDataUrl(rows?.[0]?.image);
+    return this.parseImageValue(rows?.[0]?.image);
   }
 
   /** Trae solo la guía de tallas. */
-  async findSizeGuide(slug: string): Promise<{ mimeType: string; data: Buffer } | null> {
+  async findSizeGuide(slug: string): Promise<ImageResult | null> {
     const row = await this.prisma.product.findUnique({
       where: { slug },
       select: { sizeGuide: true },
     });
-    return this.parseDataUrl(row?.sizeGuide);
+    return this.parseImageValue(row?.sizeGuide);
   }
 
-  private parseDataUrl(value: unknown): { mimeType: string; data: Buffer } | null {
+  /** La imagen puede estar como base64 (viejo) o como URL externa (Vercel Blob). */
+  private parseImageValue(value: unknown): ImageResult | null {
     if (typeof value !== 'string') return null;
+
+    if (/^https?:\/\//i.test(value)) {
+      return { redirectUrl: value };
+    }
+
     const match = /^data:([^;]+);base64,(.*)$/s.exec(value);
     if (!match) return null;
     return { mimeType: match[1], data: Buffer.from(match[2], 'base64') };

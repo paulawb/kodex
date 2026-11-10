@@ -54,8 +54,10 @@ export function withImageUrls(product: any, baseUrl: string) {
     sizeGuide: product?.sizeGuide ? `${baseUrl}/products/${slug}/size-guide${v}` : null,
     colors: (product?.colors || []).map((color: any) => ({
       ...color,
-      images: (color?.images || []).map(
-        (_image: string, index: number) => `${baseUrl}/products/${slug}/image/${index}${v}`
+      images: (color?.images || []).map((image: string, index: number) =>
+        /^https?:\/\//i.test(image)
+          ? image
+          : `${baseUrl}/products/${slug}/image/${index}${v}`
       ),
     })),
   };
