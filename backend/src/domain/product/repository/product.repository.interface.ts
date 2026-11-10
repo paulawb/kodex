@@ -3,6 +3,10 @@ import { Product } from '../entity/product.entity';
 export interface IProductRepository {
   findAll(): Promise<Product[]>;
   findFeatured(): Promise<Product[]>;
+  /** Listado liviano: no carga las imágenes en memoria. */
+  findLite(featuredOnly?: boolean): Promise<any[]>;
+  findImage(slug: string, index: number): Promise<{ mimeType: string; data: Buffer } | null>;
+  findSizeGuide(slug: string): Promise<{ mimeType: string; data: Buffer } | null>;
   findBySlug(slug: string): Promise<Product | null>;
   findById(id: string): Promise<Product | null>;
   create(product: any): Promise<Product>;

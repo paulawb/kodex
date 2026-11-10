@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Inject,
   Param,
   Header,
   NotFoundException,
@@ -11,7 +12,11 @@ import { Request, Response } from 'express';
 import { GetAllProductsUseCase } from '@application/product/use-cases/get-all-products.use-case';
 import { GetFeaturedProductsUseCase } from '@application/product/use-cases/get-featured-products.use-case';
 import { GetProductBySlugUseCase } from '@application/product/use-cases/get-product-by-slug.use-case';
-import { baseUrlFrom, withImageUrls } from '@presentation/shared/product-image';
+import {
+  IProductRepository,
+  PRODUCT_REPOSITORY,
+} from '@domain/product/repository/product.repository.interface';
+import { baseUrlFrom, toListResponse, withImageUrls } from '@presentation/shared/product-image';
 
 @Controller('products')
 export class ProductController {
@@ -19,6 +24,8 @@ export class ProductController {
     private readonly getAllProductsUseCase: GetAllProductsUseCase,
     private readonly getFeaturedProductsUseCase: GetFeaturedProductsUseCase,
     private readonly getProductBySlugUseCase: GetProductBySlugUseCase,
+    @Inject(PRODUCT_REPOSITORY)
+    private readonly productRepository: IProductRepository,
   ) {}
 
   @Get()
@@ -26,7 +33,7 @@ export class ProductController {
   async findAll(@Req() req: Request) {
     const baseUrl = baseUrlFrom(req);
     const products = await this.getAllProductsUseCase.execute();
-    return products.map((product) => withImageUrls(product, baseUrl));
+    return products.map((product) => toListResponse(product, baseUrl));
   }
 
   @Get('featured')
@@ -34,7 +41,7 @@ export class ProductController {
   async findFeatured(@Req() req: Request) {
     const baseUrl = baseUrlFrom(req);
     const products = await this.getFeaturedProductsUseCase.execute();
-    return products.map((product) => withImageUrls(product, baseUrl));
+    return products.map((product) => toListResponse(product, baseUrl));
   }
 
   @Get(':slug')
@@ -47,17 +54,12 @@ export class ProductController {
   /** Guía de tallas como imagen cacheada. */
   @Get(':slug/size-guide')
   async sizeGuide(@Param('slug') slug: string, @Res() res: Response) {
-    const product: any = await this.getProductBySlugUseCase.execute(slug);
-    const dataUrl = product?.sizeGuide;
-    if (typeof dataUrl !== 'string') throw new NotFoundException('Guía de tallas no encontrada');
+    const image = await this.productRepository.findSizeGuide(slug);
+    if (!image) throw new NotFoundException('Guía de tallas no encontrada');
 
-    const match = /^data:([^;]+);base64,(.*)$/s.exec(dataUrl);
-    if (!match) throw new NotFoundException('Guía de tallas no encontrada');
-
-    const [, mimeType, base64] = match;
-    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Type', image.mimeType);
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    res.send(Buffer.from(base64, 'base64'));
+    res.send(image.data);
   }
 
   /** Sirve la foto de un producto con caché larga (la usan <img> de la tienda). */
@@ -67,21 +69,11 @@ export class ProductController {
     @Param('index') index: string,
     @Res() res: Response,
   ) {
-    const product: any = await this.getProductBySlugUseCase.execute(slug);
-    if (!product) throw new NotFoundException('Producto no encontrado');
+    const image = await this.productRepository.findImage(slug, Number(index));
+    if (!image) throw new NotFoundException('Imagen no encontrada');
 
-    const color = product.colors?.[0];
-    const dataUrl = color?.images?.[Number(index)];
-    if (typeof dataUrl !== 'string') throw new NotFoundException('Imagen no encontrada');
-
-    const match = /^data:([^;]+);base64,(.*)$/s.exec(dataUrl);
-    if (!match) throw new NotFoundException('Imagen no encontrada');
-
-    const [, mimeType, base64] = match;
-    const buffer = Buffer.from(base64, 'base64');
-
-    res.setHeader('Content-Type', mimeType);
+    res.setHeader('Content-Type', image.mimeType);
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    res.send(buffer);
+    res.send(image.data);
   }
 }

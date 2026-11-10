@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '@infrastructure/prisma/prisma.service';
 import { IProductRepository } from '@domain/product/repository/product.repository.interface';
 import { Product, ProductColor, ProductVariant } from '@domain/product/entity/product.entity';
@@ -33,6 +34,120 @@ export class PrismaProductRepository implements IProductRepository {
       orderBy: { createdAt: 'desc' },
     });
     return products.map((p) => this.toEntity(p));
+  }
+
+  /**
+   * Listado para la tienda: usa SQL directo para NO traer las imágenes base64
+   * a memoria. Devuelve solo el conteo de fotos por color.
+   */
+  async findLite(featuredOnly = false): Promise<any[]> {
+    const rows: any[] = await this.prisma.$queryRaw`
+      SELECT
+        p.id,
+        p.name,
+        p.slug,
+        p.description,
+        p.price,
+        p."originalPrice" AS "originalPrice",
+        p.category,
+        p."isFeatured" AS "isFeatured",
+        p."freeShippingFusagasuga" AS "freeShippingFusagasuga",
+        (p."sizeGuide" IS NOT NULL) AS "hasSizeGuide",
+        p."createdAt" AS "createdAt",
+        p."updatedAt" AS "updatedAt",
+        c.id AS "colorId",
+        c.name AS "colorName",
+        c.hex AS "colorHex",
+        COALESCE(array_length(c.images, 1), 0) AS "imageCount",
+        v.id AS "variantId",
+        v.size AS "size",
+        v.stock AS "stock"
+      FROM products p
+      LEFT JOIN product_colors c ON c."productId" = p.id
+      LEFT JOIN product_variants v ON v."colorId" = c.id
+      ${featuredOnly ? Prisma.sql`WHERE p."isFeatured" = true` : Prisma.empty}
+      ORDER BY p."createdAt" DESC, c."createdAt" ASC
+    `;
+
+    const byId = new Map<string, any>();
+
+    for (const row of rows) {
+      let product = byId.get(row.id);
+      if (!product) {
+        product = {
+          id: row.id,
+          name: row.name,
+          slug: row.slug,
+          description: row.description,
+          price: row.price,
+          originalPrice: row.originalPrice,
+          category: row.category,
+          isFeatured: row.isFeatured,
+          freeShippingFusagasuga: row.freeShippingFusagasuga,
+          hasSizeGuide: row.hasSizeGuide,
+          createdAt: row.createdAt,
+          updatedAt: row.updatedAt,
+          colors: [],
+          colorIndex: new Map<string, any>(),
+        };
+        byId.set(row.id, product);
+      }
+
+      if (!row.colorId) continue;
+
+      let color = product.colorIndex.get(row.colorId);
+      if (!color) {
+        color = {
+          id: row.colorId,
+          name: row.colorName,
+          hex: row.colorHex,
+          imageCount: Number(row.imageCount) || 0,
+          variants: [],
+        };
+        product.colorIndex.set(row.colorId, color);
+        product.colors.push(color);
+      }
+
+      if (row.variantId) {
+        color.variants.push({ id: row.variantId, size: row.size, stock: row.stock });
+      }
+    }
+
+    return Array.from(byId.values()).map((product) => {
+      delete product.colorIndex;
+      return product;
+    });
+  }
+
+  /** Trae solo la imagen pedida (no todo el producto). */
+  async findImage(slug: string, index: number): Promise<{ mimeType: string; data: Buffer } | null> {
+    const position = Math.max(0, Math.trunc(index)) + 1;
+    const rows: any[] = await this.prisma.$queryRaw`
+      SELECT c.images[${position}] AS image
+      FROM product_colors c
+      JOIN products p ON p.id = c."productId"
+      WHERE p.slug = ${slug}
+      ORDER BY c."createdAt" ASC
+      LIMIT 1
+    `;
+
+    return this.parseDataUrl(rows?.[0]?.image);
+  }
+
+  /** Trae solo la guía de tallas. */
+  async findSizeGuide(slug: string): Promise<{ mimeType: string; data: Buffer } | null> {
+    const row = await this.prisma.product.findUnique({
+      where: { slug },
+      select: { sizeGuide: true },
+    });
+    return this.parseDataUrl(row?.sizeGuide);
+  }
+
+  private parseDataUrl(value: unknown): { mimeType: string; data: Buffer } | null {
+    if (typeof value !== 'string') return null;
+    const match = /^data:([^;]+);base64,(.*)$/s.exec(value);
+    if (!match) return null;
+    return { mimeType: match[1], data: Buffer.from(match[2], 'base64') };
   }
 
   async findBySlug(slug: string): Promise<Product | null> {

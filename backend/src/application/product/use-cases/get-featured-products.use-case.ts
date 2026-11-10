@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { IProductRepository, PRODUCT_REPOSITORY } from '@domain/product/repository/product.repository.interface';
-import { Product } from '@domain/product/entity/product.entity';
 
 @Injectable()
 export class GetFeaturedProductsUseCase {
@@ -9,7 +8,8 @@ export class GetFeaturedProductsUseCase {
     private readonly productRepository: IProductRepository,
   ) {}
 
-  async execute(): Promise<Product[]> {
-    return this.productRepository.findFeatured();
+  /** Listado liviano (sin imágenes en el JSON). */
+  async execute(): Promise<any[]> {
+    return this.productRepository.findLite(true);
   }
 }

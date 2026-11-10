@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Req } from '@nestjs/common';
 import { Request } from 'express';
-import { baseUrlFrom, withImageUrls } from '@presentation/shared/product-image';
+import { baseUrlFrom, toListResponse } from '@presentation/shared/product-image';
 import { AdminGuard } from './admin.guard';
 import { CreateProductUseCase } from '@application/product/use-cases/create-product.use-case';
 import { UpdateProductUseCase } from '@application/product/use-cases/update-product.use-case';
@@ -40,7 +40,7 @@ export class AdminController {
   async findAll(@Req() req: Request) {
     const baseUrl = baseUrlFrom(req);
     const products = await this.getAllProductsUseCase.execute();
-    return products.map((product) => withImageUrls(product, baseUrl));
+    return products.map((product) => toListResponse(product, baseUrl));
   }
 
   @Get('products/:id')

@@ -9,6 +9,37 @@ export function baseUrlFrom(req: Request): string {
 }
 
 /** Reemplaza las imágenes base64 por URLs con caché, para que el JSON sea liviano. */
+/** Convierte un producto "lite" (sin base64) al JSON que consume la tienda. */
+export function toListResponse(product: any, baseUrl: string) {
+  const updated = product?.updatedAt ? new Date(product.updatedAt).getTime() : 0;
+  const v = `?v=${updated || Date.now()}`;
+
+  return {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    description: product.description,
+    price: product.price,
+    originalPrice: product.originalPrice ?? null,
+    category: product.category,
+    isFeatured: product.isFeatured,
+    freeShippingFusagasuga: Boolean(product.freeShippingFusagasuga),
+    sizeGuide: product.hasSizeGuide ? `${baseUrl}/products/${product.slug}/size-guide${v}` : null,
+    createdAt: product.createdAt,
+    updatedAt: product.updatedAt,
+    colors: (product.colors || []).map((color: any) => ({
+      id: color.id,
+      name: color.name,
+      hex: color.hex,
+      images:
+        Number(color.imageCount) > 0
+          ? [`${baseUrl}/products/${product.slug}/image/0${v}`]
+          : [],
+      variants: color.variants || [],
+    })),
+  };
+}
+
 export function withImageUrls(product: any, baseUrl: string) {
   const slug = product?.slug;
 
