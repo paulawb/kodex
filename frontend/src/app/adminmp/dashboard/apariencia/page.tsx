@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { adminGetSiteSettings, adminUpdateSiteSettings, SiteSettings } from "@/lib/api";
 import { getAdminPass } from "@/lib/admin-auth";
+import { uploadImage } from "@/lib/upload-image";
 import { ImagePlus, Trash2, Save, ArrowLeft } from "lucide-react";
 
 const MAX_FILE_MB = 10;
@@ -71,6 +72,7 @@ export default function AppearancePage() {
   const [isAuth, setIsAuth] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [settings, setSettings] = useState<SiteSettings>({
     banner: null,
@@ -101,8 +103,18 @@ export default function AppearancePage() {
       return;
     }
     const dataUrl = await fileToDataUrl(file);
-    setSettings((prev) => ({ ...prev, [key]: dataUrl }));
-    setMessage("");
+
+    // La subimos a Vercel Blob para que no ocupe la base de datos.
+    setUploading(true);
+    try {
+      const url = await uploadImage(dataUrl);
+      setSettings((prev) => ({ ...prev, [key]: url }));
+      setMessage("");
+    } catch (error: any) {
+      alert(error?.message || "No se pudo subir la imagen");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleRemove = (key: keyof SiteSettings) => {
@@ -194,7 +206,7 @@ export default function AppearancePage() {
 
                 <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed px-4 py-3 text-sm hover:bg-muted/50">
                   <ImagePlus className="h-4 w-4" />
-                  Subir imagen
+                  {uploading ? "Subiendo imagen..." : "Subir imagen"}
                   <input
                     type="file"
                     className="hidden"
@@ -213,12 +225,12 @@ export default function AppearancePage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Button
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || uploading}
               size="lg"
               className="bg-primary hover:bg-red-700"
             >
               <Save className="mr-2 h-5 w-5" />
-              {saving ? "GUARDANDO..." : "GUARDAR CAMBIOS"}
+              {uploading ? "SUBIENDO IMAGEN..." : saving ? "GUARDANDO..." : "GUARDAR CAMBIOS"}
             </Button>
             {message && <p className="text-sm text-muted-foreground">{message}</p>}
           </div>

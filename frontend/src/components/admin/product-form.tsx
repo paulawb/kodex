@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { adminCreateProduct, adminGetProduct, adminUpdateProduct } from "@/lib/api";
 import { getAdminPass } from "@/lib/admin-auth";
 import { getCachedProduct, updateCachedProduct } from "@/lib/admin-products-cache";
+import { uploadImage } from "@/lib/upload-image";
 import { ImageCropper } from "@/components/admin/image-cropper";
 import Image from "next/image";
 import { Crop, Plus, Trash2, Upload, X } from "lucide-react";
@@ -32,34 +33,6 @@ interface ColorForm {
 }
 
 const AVAILABLE_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "28", "30", "32", "34", "36", "38"];
-
-/** Sube la imagen a Vercel Blob y devuelve la URL pública. */
-async function uploadImage(dataUrl: string): Promise<string> {
-  // Si ya es una URL (foto existente), no hay nada que subir.
-  if (/^https?:\/\//i.test(dataUrl)) return dataUrl;
-
-  const blob = await (await fetch(dataUrl)).blob();
-  const form = new FormData();
-  form.append("file", blob, "foto.jpg");
-
-  const res = await fetch("/api/upload", { method: "POST", body: form });
-  if (!res.ok) {
-    let message = "No se pudo subir la imagen";
-    try {
-      const json = await res.json();
-      if (json?.error) message = json.error;
-    } catch {}
-
-    // Si Vercel Blob no está configurado, guardamos la foto comprimida
-    // directamente en la base de datos (modo de respaldo).
-    if (message.includes("BLOB_READ_WRITE_TOKEN")) return dataUrl;
-
-    throw new Error(message);
-  }
-
-  const json = await res.json();
-  return json.url as string;
-}
 
 const COLOR_PALETTE = [
   "#000000", "#FFFFFF", "#FF0000", "#DC2626", "#B91C1C", "#991B1B",
