@@ -10,18 +10,42 @@ import { Product } from "@/types/product";
 export function ProductGrid() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+
+  const load = () => {
+    setLoading(true);
+    setFailed(false);
+    getProducts({ fresh: true })
+      .then(setProducts)
+      .catch(() => setFailed(true))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    getProducts()
-      .then(setProducts)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    load();
   }, []);
 
   if (loading) {
     return (
       <div className="text-center py-20">
         <p className="text-muted-foreground">Cargando productos...</p>
+      </div>
+    );
+  }
+
+  if (failed) {
+    return (
+      <div className="text-center py-20 space-y-4">
+        <p className="text-muted-foreground">
+          No pudimos cargar las prendas. El servidor puede estar iniciando.
+        </p>
+        <button
+          type="button"
+          onClick={load}
+          className="px-6 py-2 bg-primary text-white text-sm font-semibold hover:bg-red-700 transition-colors"
+        >
+          REINTENTAR
+        </button>
       </div>
     );
   }
