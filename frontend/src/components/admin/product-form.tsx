@@ -12,7 +12,6 @@ import { getAdminPass } from "@/lib/admin-auth";
 import { getCachedProduct, updateCachedProduct } from "@/lib/admin-products-cache";
 import { uploadImage } from "@/lib/upload-image";
 import { ImageCropper } from "@/components/admin/image-cropper";
-import Image from "next/image";
 import { Crop, Plus, Trash2, Upload, X } from "lucide-react";
 
 interface ProductFormProps {
@@ -590,11 +589,10 @@ export function ProductForm({ id }: ProductFormProps) {
                           <Label className="text-xs">{imgIndex === 0 ? "Delantero *" : "Trasero *"}</Label>
                           {color.images[imgIndex] ? (
                             <div className="relative aspect-[3/4] border rounded-lg overflow-hidden">
-                              <Image
+                              <img
                                 src={color.images[imgIndex]}
                                 alt={`Color ${color.name} ${imgIndex === 0 ? "delantero" : "trasero"}`}
-                                fill
-                                className="object-cover"
+                                className="absolute inset-0 h-full w-full object-cover"
                               />
                               <Button
                                 type="button"
