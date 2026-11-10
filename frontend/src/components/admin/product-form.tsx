@@ -255,7 +255,10 @@ export function ProductForm({ id }: ProductFormProps) {
   const addVariant = (colorIndex: number) => {
     setColors((prevColors) => {
       const newColors = [...prevColors];
-      newColors[colorIndex].variants.push({ size: "M", stock: 0 });
+      const used = newColors[colorIndex].variants.map((v) => v.size);
+      // Elige la siguiente talla libre, así no hay que cambiarla en el desplegable.
+      const size = AVAILABLE_SIZES.find((s) => !used.includes(s)) || AVAILABLE_SIZES[0];
+      newColors[colorIndex].variants.push({ size, stock: 0 });
       return newColors;
     });
   };
